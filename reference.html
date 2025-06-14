@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Inventory Management System - Enhanced Sidebar Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+         :root {
+            --bg-color: #F1F1F1;
+            --text-color: #202020;
+            --secondary-color: #7E909A;
+            --primary-color: #1C4E80;
+            --accent1-color: #A5D8DD;
+            --accent2-color: #EA6A47;
+            --highlight-color: #0091D5;
+        }
+        
+        .custom-bg {
+            background-color: var(--bg-color);
+        }
+        
+        .custom-text {
+            color: var(--text-color);
+        }
+        
+        .custom-secondary {
+            color: var(--secondary-color);
+        }
+        
+        .custom-primary {
+            background-color: var(--primary-color);
+        }
+        
+        .custom-accent1 {
+            background-color: var(--accent1-color);
+        }
+        
+        .custom-accent2 {
+            background-color: var(--accent2-color);
+        }
+        
+        .custom-highlight {
+            background-color: var(--highlight-color);
+        }
+        
+        .sidebar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0d3a5f 100%);
+            min-height: 100vh;
+            width: 280px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+        
+        .nav-item {
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            margin: 4px 0;
+        }
+        
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .nav-item.active {
+            background-color: var(--highlight-color);
+            color: white;
+        }
+        
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .chart-container {
+            height: 300px;
+            width: 100%;
+        }
+        
+        .notification-badge {
+            background-color: var(--accent2-color);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            top: -2px;
+            right: -2px;
+        }
+        
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .collapsible-content.expanded {
+            max-height: 500px;
+        }
+        
+        .status-online {
+            color: #10B981;
+        }
+        
+        .status-warning {
+            color: var(--accent2-color);
+        }
+        
+        .status-offline {
+            color: #EF4444;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+
+<body class="custom-bg custom-text">
+    <!-- Sidebar -->
+    <div class="sidebar text-white">
+        <!-- User Profile Section -->
+        <div class="p-6 border-b border-white border-opacity-20">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="font-semibold">Admin User</h3>
+                    <p class="text-sm opacity-75">System Administrator</p>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-shield-alt text-green-400 text-sm"></i>
+                    <span class="text-xs opacity-75">JWT Active</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-circle text-green-400 text-xs"></i>
+                    <span class="text-xs opacity-75">Online</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <div class="p-4">
+            <nav class="space-y-2">
+                <div class="nav-item active p-3 flex items-center space-x-3 cursor-pointer">
+                    <i class="fas fa-tachometer-alt w-5"></i>
+                    <span>Dashboard</span>
+                </div>
+
+                <!-- Product Management Section -->
+                <div class="nav-section">
+                    <div class="nav-item p-3 flex items-center justify-between cursor-pointer" onclick="toggleSection('products')">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-box w-5"></i>
+                            <span>Products</span>
+                        </div>
+                        <i class="fas fa-chevron-right transition-transform duration-300" id="products-arrow"></i>
+                    </div>
+                    <div class="collapsible-content ml-8" id="products-content">
+                        <div class="nav-item p-2 flex items-center space-x-3 cursor-pointer">
+                            <i class="fas fa-plus-circle w-4"></i>
+                            <span class="text-sm">Add Product</span>
+                        </div>
+                        <div class="nav-item p-2 flex items-center space-x-3 cursor-pointer">
+                            <i class="fas fa-list w-4"></i>
+                            <span class="text-sm">View All Products</span>
+                        </div>
+                        <div class="nav-item p-2 flex items-center space-x-3 cursor-pointer">
+                            <i class="fas fa-tags w-4"></i>
+                            <span class="text-sm">Categories</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inventory Section -->
+                <div class="nav-section">
+                    <div class="nav-item p-3 flex items-center justify-between cursor-pointer" onclick="toggleSection('inventory')">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-warehouse w-5"></i>
+                            <span>Inventory</span>
+                            <div class="notification-badge">3</div>
+                        </div>
+                        <i class="fas fa-chevron-right transition-transform duration-300" id="inventory-arrow"></i>
+                    </div>
+                    <div class="collapsible-content ml-8" id="inventory-content">
+                        <div class="nav-item p-2 flex items-center space-x-3 cursor-pointer">
+                            <i class="fas fa-chart-line w-4"></i>
+                            <span class="text-sm">Stock Levels</span>
+                        </div>
+                        <div class="nav-item p-2 flex items-center space-x-3 cursor-pointer">
+                            <i class="fas fa-exclamation-triangle w-4 text-yellow-400"></i>
+                            <span class="text-sm">Low Stock Alerts</span>
+                        </div>
+                        <div class="nav-item p-2 flex items-center space-x-3 cursor-pointer">
+                            <i class="fas fa-sync-alt w-4"></i>
+                            <span class="text-sm">Stock Movements</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Suppliers Section -->
+                <div class="nav-section">
+                    <div class="nav-item p-3 flex items-center justify-between cursor-pointer" onclick="toggleSection('suppliers')">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-truck w-5"></i>
+                            <span>Suppliers</span>
+                        </div>
+                        <i class="fas fa-chevron-right transition-transform duration-300" id="suppliers-arrow"></i>
+                    </div>
+                    <div class="collapsible-content ml-8" id="suppliers-content">
+                        <div class="nav-item p-2 flex items-center space-x-3 cursor-pointer">
+                            <i class="fas fa-plus w-4"></i>
+                            <span class="text-sm">Add Supplier</span>
+                        </div>
+                        <div class="nav-item p-2 flex items-center space-x-3 cursor-pointer">
+                            <i class="fas fa-building w-4"></i>
+                            <span class="text-sm">All Suppliers</span>
+                        </div>
+                        <div class="nav-item p-2 flex items-center space-x-3 cursor-pointer">
+                            <i class="fas fa-handshake w-4"></i>
+                            <span class="text-sm">Transactions</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Orders Section -->
+                <div class="nav-section">
+                    <div class="nav-item p-3 flex items-center justify-between cursor-pointer" onclick="toggleSection('orders')">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-shopping-cart w-5"></i>
+                            <span>Orders</span>
+                            <div class="notification-badge">7</div>
+                        </div>
+                        <i class="fas fa-chevron-right transition-transform duration-300" id="orders-arrow"></i>
+                    </div>
+                    <div class="collapsible-content ml-8" id="orders-content">
+                        <div class="nav-item p-2 flex items-center space-x-3 cursor-pointer">
+                            <i class="fas fa-plus-square w-4"></i>
+                            <span class="text-sm">New Order</span>
+                        </div>
+                        <div class="nav-item p-2 flex items-center space-x-3 cursor-pointer">
+                            <i class="fas fa-clock w-4 text-yellow-400"></i>
+                            <span class="text-sm">Pending Orders</span>
+                        </div>
+                        <div class="nav-item p-2 flex items-center space-x-3 cursor-pointer">
+                            <i class="fas fa-check-circle w-4 text-green-400"></i>
+                            <span class="text-sm">Completed</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Section -->
+                <div class="nav-item p-3 flex items-center space-x-3 cursor-pointer">
+                    <i class="fas fa-users w-5"></i>
+                    <span>User Management</span>
+                </div>
+
+                <!-- Reports Section -->
+                <div class="nav-item p-3 flex items-center space-x-3 cursor-pointer">
+                    <i class="fas fa-chart-bar w-5"></i>
+                    <span>Reports & Analytics</span>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Notifications Section -->
+        <div class="p-4 border-t border-white border-opacity-20">
+            <h4 class="text-sm font-semibold mb-3 opacity-75">Recent Notifications</h4>
+            <div class="space-y-3">
+                <div class="bg-white bg-opacity-10 p-3 rounded-lg">
+                    <div class="flex items-start space-x-2">
+                        <i class="fas fa-exclamation-triangle text-yellow-400 text-sm mt-1"></i>
+                        <div>
+                            <p class="text-xs">Low stock alert for Office Chair</p>
+                            <p class="text-xs opacity-50">2 min ago</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white bg-opacity-10 p-3 rounded-lg">
+                    <div class="flex items-start space-x-2">
+                        <i class="fas fa-check-circle text-green-400 text-sm mt-1"></i>
+                        <div>
+                            <p class="text-xs">Order #ORD-2024-001 completed</p>
+                            <p class="text-xs opacity-50">15 min ago</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white bg-opacity-10 p-3 rounded-lg">
+                    <div class="flex items-start space-x-2">
+                        <i class="fas fa-user-plus text-blue-400 text-sm mt-1"></i>
+                        <div>
+                            <p class="text-xs">New supplier registered</p>
+                            <p class="text-xs opacity-50">1 hour ago</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="w-full mt-3 text-xs opacity-75 hover:opacity-100 transition-opacity">
+                View All Notifications
+            </button>
+        </div>
+
+        <!-- System Status -->
+        <div class="p-4 border-t border-white border-opacity-20">
+            <h4 class="text-sm font-semibold mb-3 opacity-75">System Status</h4>
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">Database</span>
+                    <i class="fas fa-circle text-green-400 text-xs"></i>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">API Server</span>
+                    <i class="fas fa-circle text-green-400 text-xs"></i>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs">Background Jobs</span>
+                    <i class="fas fa-circle text-yellow-400 text-xs"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings -->
+        <div class="p-4 border-t border-white border-opacity-20">
+            <div class="nav-item p-3 flex items-center space-x-3 cursor-pointer">
+                <i class="fas fa-cog w-5"></i>
+                <span>Settings</span>
+            </div>
+            <div class="nav-item p-3 flex items-center space-x-3 cursor-pointer">
+                <i class="fas fa-sign-out-alt w-5"></i>
+                <span>Logout</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <header class="bg-white shadow-sm p-6">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <button class="md:hidden" onclick="toggleMobileSidebar()">
+                        <i class="fas fa-bars text-xl custom-text"></i>
+                    </button>
+                    <div>
+                        <h1 class="text-2xl font-bold custom-text">Smart Inventory Dashboard</h1>
+                        <p class="custom-secondary text-sm">Welcome back, Admin User</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <i class="fas fa-bell custom-secondary text-lg cursor-pointer"></i>
+                        <div class="notification-badge">5</div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-calendar custom-secondary"></i>
+                        <span class="custom-secondary text-sm">Jan 15, 2024</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <div class="p-6 space-y-6">
+            <!-- Key Metrics Row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white p-6 rounded-lg card-shadow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="custom-secondary text-sm font-medium">Total Products</p>
+                            <p class="text-3xl font-bold custom-text">1,247</p>
+                        </div>
+                        <div class="custom-highlight text-white p-3 rounded-full">
+                            <i class="fas fa-box text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center">
+                        <i class="fas fa-arrow-up text-green-500 text-sm"></i>
+                        <span class="text-green-500 text-sm ml-1">+12%</span>
+                        <span class="custom-secondary text-sm ml-2">from last month</span>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg card-shadow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="custom-secondary text-sm font-medium">Low Stock Alerts</p>
+                            <p class="text-3xl font-bold" style="color: var(--accent2-color)">23</p>
+                        </div>
+                        <div style="background-color: var(--accent2-color)" class="text-white p-3 rounded-full">
+                            <i class="fas fa-exclamation-triangle text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center">
+                        <i class="fas fa-arrow-down text-red-500 text-sm"></i>
+                        <span class="text-red-500 text-sm ml-1">-5%</span>
+                        <span class="custom-secondary text-sm ml-2">from last week</span>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg card-shadow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="custom-secondary text-sm font-medium">Active Suppliers</p>
+                            <p class="text-3xl font-bold custom-text">86</p>
+                        </div>
+                        <div style="background-color: var(--accent1-color)" class="text-white p-3 rounded-full">
+                            <i class="fas fa-truck text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center">
+                        <i class="fas fa-arrow-up text-green-500 text-sm"></i>
+                        <span class="text-green-500 text-sm ml-1">+3</span>
+                        <span class="custom-secondary text-sm ml-2">new this month</span>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg card-shadow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="custom-secondary text-sm font-medium">Pending Orders</p>
+                            <p class="text-3xl font-bold custom-text">34</p>
+                        </div>
+                        <div class="custom-primary text-white p-3 rounded-full">
+                            <i class="fas fa-shopping-cart text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center">
+                        <i class="fas fa-clock custom-secondary text-sm"></i>
+                        <span class="custom-secondary text-sm ml-2">Processing</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts and Analytics Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-lg card-shadow">
+                    <h3 class="text-lg font-semibold custom-text mb-4">Inventory Levels by Category</h3>
+                    <div class="chart-container">
+                        <canvas id="inventoryChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg card-shadow">
+                    <h3 class="text-lg font-semibold custom-text mb-4">Sales vs Purchase Orders</h3>
+                    <div class="chart-container">
+                        <canvas id="ordersChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tables Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Recent Products -->
+                <div class="bg-white p-6 rounded-lg card-shadow">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold custom-text">Recent Products</h3>
+                        <button class="custom-highlight text-white px-4 py-2 rounded-lg text-sm">
+                            <i class="fas fa-plus mr-2"></i>Add Product
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="custom-bg">
+                                <tr>
+                                    <th class="px-4 py-3 text-left custom-text font-medium">Product</th>
+                                    <th class="px-4 py-3 text-left custom-text font-medium">Category</th>
+                                    <th class="px-4 py-3 text-left custom-text font-medium">Stock</th>
+                                    <th class="px-4 py-3 text-left custom-text font-medium">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-4 py-3 custom-text">Wireless Headphones</td>
+                                    <td class="px-4 py-3 custom-secondary">Electronics</td>
+                                    <td class="px-4 py-3 custom-text">145</td>
+                                    <td class="px-4 py-3"><span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">In Stock</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 custom-text">Office Chair</td>
+                                    <td class="px-4 py-3 custom-secondary">Furniture</td>
+                                    <td class="px-4 py-3 custom-text">8</td>
+                                    <td class="px-4 py-3"><span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">Low Stock</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 custom-text">Laptop Stand</td>
+                                    <td class="px-4 py-3 custom-secondary">Accessories</td>
+                                    <td class="px-4 py-3 custom-text">67</td>
+                                    <td class="px-4 py-3"><span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">In Stock</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 custom-text">Desk Lamp</td>
+                                    <td class="px-4 py-3 custom-secondary">Lighting</td>
+                                    <td class="px-4 py-3 custom-text">0</td>
+                                    <td class="px-4 py-3"><span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">Out of Stock</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Supplier Management -->
+                <div class="bg-white p-6 rounded-lg card-shadow">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold custom-text">Top Suppliers</h3>
+                        <button class="custom-primary text-white px-4 py-2 rounded-lg text-sm">
+                            <i class="fas fa-plus mr-2"></i>Add Supplier
+                        </button>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-4 border rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-building text-blue-600"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium custom-text">TechCorp Solutions</p>
+                                    <p class="text-sm custom-secondary">Electronics & Gadgets</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-medium custom-text">$45,230</p>
+                                <p class="text-sm text-green-600">Active</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-4 border rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-leaf text-green-600"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium custom-text">Green Office Supplies</p>
+                                    <p class="text-sm custom-secondary">Office & Stationery</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-medium custom-text">$23,450</p>
+                                <p class="text-sm text-green-600">Active</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-4 border rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-couch text-purple-600"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium custom-text">Modern Furniture Co.</p>
+                                    <p class="text-sm custom-secondary">Furniture & Decor</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-medium custom-text">$18,900</p>
+                                <p class="text-sm text-yellow-600">Pending</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Management -->
+            <div class="bg-white p-6 rounded-lg card-shadow">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold custom-text">Recent Orders</h3>
+                    <div class="flex space-x-2">
+                        <button class="custom-primary text-white px-4 py-2 rounded-lg text-sm">
+                            <i class="fas fa-plus mr-2"></i>New Order
+                        </button>
+                        <button class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm">
+                            <i class="fas fa-download mr-2"></i>Export
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="custom-bg">
+                            <tr>
+                                <th class="px-4 py-3 text-left custom-text font-medium">Order ID</th>
+                                <th class="px-4 py-3 text-left custom-text font-medium">Type</th>
+                                <th class="px-4 py-3 text-left custom-text font-medium">Supplier/Customer</th>
+                                <th class="px-4 py-3 text-left custom-text font-medium">Amount</th>
+                                <th class="px-4 py-3 text-left custom-text font-medium">Status</th>
+                                <th class="px-4 py-3 text-left custom-text font-medium">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            <tr>
+                                <td class="px-4 py-3 custom-text font-medium">#ORD-2024-001</td>
+                                <td class="px-4 py-3"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">Purchase</span></td>
+                                <td class="px-4 py-3 custom-text">TechCorp Solutions</td>
+                                <td class="px-4 py-3 custom-text">$4,250</td>
+                                <td class="px-4 py-3"><span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Completed</span></td>
+                                <td class="px-4 py-3 custom-secondary">2024-01-15</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3 custom-text font-medium">#ORD-2024-002</td>
+                                <td class="px-4 py-3"><span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Sales</span></td>
+                                <td class="px-4 py-3 custom-text">ABC Company</td>
+                                <td class="px-4 py-3 custom-text">$1,890</td>
+                                <td class="px-4 py-3"><span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">Pending</span></td>
+                                <td class="px-4 py-3 custom-secondary">2024-01-14</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3 custom-text font-medium">#ORD-2024-003</td>
+                                <td class="px-4 py-3"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">Purchase</span></td>
+                                <td class="px-4 py-3 custom-text">Green Office Supplies</td>
+                                <td class="px-4 py-3 custom-text">$875</td>
+                                <td class="px-4 py-3"><span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">Processing</span></td>
+                                <td class="px-4 py-3 custom-secondary">2024-01-13</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="bg-white p-6 rounded-lg card-shadow">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="custom-text font-medium">Smart Inventory Management System</p>
+                        <p class="custom-secondary text-sm">Built with Spring Boot, Spring Security & JWT Authentication</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="text-right">
+                            <p class="custom-text text-sm">Version 1.0.0</p>
+                            <p class="custom-secondary text-xs">Last updated: Jan 15, 2024</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-shield-alt text-green-500"></i>
+                            <span class="text-sm text-green-600">Secure</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle collapsible sections
+        function toggleSection(sectionId) {
+            const content = document.getElementById(sectionId + '-content');
+            const arrow = document.getElementById(sectionId + '-arrow');
+
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                arrow.style.transform = 'rotate(0deg)';
+            } else {
+                content.classList.add('expanded');
+                arrow.style.transform = 'rotate(90deg)';
+            }
+        }
+
+        // Mobile sidebar toggle
+        function toggleMobileSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('mobile-open');
+        }
+
+        // Initialize charts
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inventory Levels Chart
+            const inventoryCtx = document.getElementById('inventoryChart').getContext('2d');
+            new Chart(inventoryCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Electronics', 'Furniture', 'Office Supplies', 'Accessories', 'Lighting'],
+                    datasets: [{
+                        data: [435, 287, 198, 156, 123],
+                        backgroundColor: [
+                            '#1C4E80',
+                            '#0091D5',
+                            '#A5D8DD',
+                            '#EA6A47',
+                            '#7E909A'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Sales vs Purchase Orders Chart
+            const ordersCtx = document.getElementById('ordersChart').getContext('2d');
+            new Chart(ordersCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Sales Orders',
+                        data: [45, 52, 48, 61, 58, 64, 67, 71, 69, 73, 76, 78],
+                        borderColor: '#0091D5',
+                        backgroundColor: 'rgba(0, 145, 213, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'Purchase Orders',
+                        data: [32, 38, 35, 42, 39, 45, 48, 52, 49, 54, 57, 59],
+                        borderColor: '#EA6A47',
+                        backgroundColor: 'rgba(234, 106, 71, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+        // Close mobile sidebar when clicking outside
+        document.addEventListener('click', function(event) {
+            const sidebar = document.querySelector('.sidebar');
+            const mobileButton = event.target.closest('button');
+
+            if (!sidebar.contains(event.target) && !mobileButton) {
+                sidebar.classList.remove('mobile-open');
+            }
+        });
+    </script>
+</body>
+
+</html>
