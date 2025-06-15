@@ -30,7 +30,7 @@
     <!-- Navigation Menu -->
     <div class="p-4">
         <nav class="space-y-2">
-            <a href="/dashboard" class="nav-item p-3 flex items-center space-x-3 text-white no-underline block" th:classappend="${#httpServletRequest.requestURI == '/dashboard' ? 'active' : ''}">
+            <a href="/dashboard" class="nav-item p-3 flex items-center space-x-3 text-white no-underline block" th:classappend="${currentUri == '/dashboard' ? 'active' : ''}">
                 <i class="fas fa-tachometer-alt w-5"></i>
                 <span>Dashboard</span>
             </a>

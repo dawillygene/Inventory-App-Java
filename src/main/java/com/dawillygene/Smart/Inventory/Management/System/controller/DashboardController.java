@@ -43,6 +43,9 @@ public class DashboardController {
         // Add user info
         model.addAttribute("currentUser", authentication.getName());
         
+        // Add current URI for navigation highlighting
+        model.addAttribute("currentUri", "/dashboard");
+        
         return "dashboard/index";
     }
 }
