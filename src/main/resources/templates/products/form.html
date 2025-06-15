@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${product.id != null ? 'Edit Product' : 'Add Product'} + ' - Smart Inventory Management System'">Add Product - Smart Inventory Management System</title>
+
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+
+    <style>
+         :root {
+            --bg-color: #F1F1F1;
+            --text-color: #202020;
+            --secondary-color: #7E909A;
+            --primary-color: #1C4E80;
+            --accent1-color: #A5D8DD;
+            --accent2-color: #EA6A47;
+            --highlight-color: #0091D5;
+        }
+        
+        .custom-bg {
+            background-color: var(--bg-color);
+        }
+        
+        .custom-text {
+            color: var(--text-color);
+        }
+        
+        .custom-secondary {
+            color: var(--secondary-color);
+        }
+        
+        .custom-primary {
+            background-color: var(--primary-color);
+        }
+        
+        .custom-highlight {
+            background-color: var(--highlight-color);
+        }
+        
+        .sidebar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0d3a5f 100%);
+            min-height: 100vh;
+            width: 280px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+        
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+
+<body class="custom-bg custom-text">
+    <!-- Sidebar -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div th:replace="~{fragments/sidebar :: header}"></div>
+
+        <!-- Product Form Content -->
+        <div class="p-6">
+            <!-- Page Header -->
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-3xl font-bold custom-text" th:text="${product.id != null ? 'Edit Product' : 'Add Product'}">Add Product</h1>
+                    <p class="custom-secondary mt-1">Create or update product information</p>
+                </div>
+                <a href="/products" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Products
+                </a>
+            </div>
+
+            <!-- Alert Messages -->
+            <div th:if="${error}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                <div class="flex">
+                    <i class="fas fa-exclamation-circle mr-2 mt-1"></i>
+                    <span th:text="${error}"></span>
+                </div>
+            </div>
+
+            <!-- Product Form -->
+            <form th:action="@{/products/save}" th:object="${product}" method="post" enctype="multipart/form-data">
+                <input type="hidden" th:field="*{id}">
+                <input type="hidden" th:field="*{createdAt}">
+                <input type="hidden" th:field="*{updatedAt}">
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Main Product Information -->
+                    <div class="lg:col-span-2">
+                        <div class="bg-white p-6 rounded-lg card-shadow mb-6">
+                            <h3 class="text-lg font-semibold custom-text mb-4">Basic Information</h3>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="name" class="block text-sm font-medium custom-text mb-2">Product Name *</label>
+                                    <input type="text" th:field="*{name}" id="name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter product name">
+                                    <div th:if="${#fields.hasErrors('name')}" class="text-red-500 text-sm mt-1" th:errors="*{name}"></div>
+                                </div>
+
+                                <div>
+                                    <label for="sku" class="block text-sm font-medium custom-text mb-2">SKU *</label>
+                                    <input type="text" th:field="*{sku}" id="sku" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter SKU">
+                                    <div th:if="${#fields.hasErrors('sku')}" class="text-red-500 text-sm mt-1" th:errors="*{sku}"></div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <label for="description" class="block text-sm font-medium custom-text mb-2">Description</label>
+                                <textarea th:field="*{description}" id="description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter product description"></textarea>
+                                <div th:if="${#fields.hasErrors('description')}" class="text-red-500 text-sm mt-1" th:errors="*{description}"></div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                <div>
+                                    <label for="barcode" class="block text-sm font-medium custom-text mb-2">Barcode</label>
+                                    <input type="text" th:field="*{barcode}" id="barcode" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter barcode">
+                                    <div th:if="${#fields.hasErrors('barcode')}" class="text-red-500 text-sm mt-1" th:errors="*{barcode}"></div>
+                                </div>
+
+                                <div>
+                                    <label for="unitOfMeasure" class="block text-sm font-medium custom-text mb-2">Unit of Measure</label>
+                                    <select th:field="*{unitOfMeasure}" id="unitOfMeasure" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <option value="">Select unit</option>
+                                        <option value="PIECE">Piece</option>
+                                        <option value="KILOGRAM">Kilogram</option>
+                                        <option value="LITER">Liter</option>
+                                        <option value="METER">Meter</option>
+                                        <option value="PACK">Pack</option>
+                                        <option value="BOX">Box</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pricing Information -->
+                        <div class="bg-white p-6 rounded-lg card-shadow mb-6">
+                            <h3 class="text-lg font-semibold custom-text mb-4">Pricing Information</h3>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="cost" class="block text-sm font-medium custom-text mb-2">Cost Price *</label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-3 text-gray-500">$</span>
+                                        <input type="number" th:field="*{cost}" id="cost" step="0.01" min="0" required class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="0.00">
+                                    </div>
+                                    <div th:if="${#fields.hasErrors('cost')}" class="text-red-500 text-sm mt-1" th:errors="*{cost}"></div>
+                                </div>
+
+                                <div>
+                                    <label for="price" class="block text-sm font-medium custom-text mb-2">Selling Price *</label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-3 text-gray-500">$</span>
+                                        <input type="number" th:field="*{price}" id="price" step="0.01" min="0" required class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="0.00">
+                                    </div>
+                                    <div th:if="${#fields.hasErrors('price')}" class="text-red-500 text-sm mt-1" th:errors="*{price}"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Physical Properties -->
+                        <div class="bg-white p-6 rounded-lg card-shadow mb-6">
+                            <h3 class="text-lg font-semibold custom-text mb-4">Physical Properties</h3>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="weight" class="block text-sm font-medium custom-text mb-2">Weight (kg)</label>
+                                    <input type="number" th:field="*{weight}" id="weight" step="0.01" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="0.00">
+                                    <div th:if="${#fields.hasErrors('weight')}" class="text-red-500 text-sm mt-1" th:errors="*{weight}"></div>
+                                </div>
+
+                                <div>
+                                    <label for="dimensions" class="block text-sm font-medium custom-text mb-2">Dimensions</label>
+                                    <input type="text" th:field="*{dimensions}" id="dimensions" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="L x W x H">
+                                    <div th:if="${#fields.hasErrors('dimensions')}" class="text-red-500 text-sm mt-1" th:errors="*{dimensions}"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Perishable Information -->
+                        <div class="bg-white p-6 rounded-lg card-shadow">
+                            <h3 class="text-lg font-semibold custom-text mb-4">Perishable Information</h3>
+
+                            <div class="flex items-center mb-4">
+                                <input type="checkbox" th:field="*{isPerishable}" id="isPerishable" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="isPerishable" class="ml-2 block text-sm custom-text">
+                                    This product is perishable
+                                </label>
+                            </div>
+
+                            <div id="perishableFields" class="grid grid-cols-1 md:grid-cols-2 gap-4" style="display: none;">
+                                <div>
+                                    <label for="shelfLifeDays" class="block text-sm font-medium custom-text mb-2">Shelf Life (days)</label>
+                                    <input type="number" th:field="*{shelfLifeDays}" id="shelfLifeDays" min="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter shelf life in days">
+                                    <div th:if="${#fields.hasErrors('shelfLifeDays')}" class="text-red-500 text-sm mt-1" th:errors="*{shelfLifeDays}"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar Information -->
+                    <div class="lg:col-span-1">
+                        <!-- Category and Supplier -->
+                        <div class="bg-white p-6 rounded-lg card-shadow mb-6">
+                            <h3 class="text-lg font-semibold custom-text mb-4">Category & Supplier</h3>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="category" class="block text-sm font-medium custom-text mb-2">Category *</label>
+                                    <select th:field="*{category.id}" id="category" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <option value="">Select category</option>
+                                        <option th:each="category : ${categories}" 
+                                                th:value="${category.id}" 
+                                                th:text="${category.name}"></option>
+                                    </select>
+                                    <div th:if="${#fields.hasErrors('category')}" class="text-red-500 text-sm mt-1" th:errors="*{category}"></div>
+                                </div>
+
+                                <div>
+                                    <label for="supplier" class="block text-sm font-medium custom-text mb-2">Supplier *</label>
+                                    <select th:field="*{supplier.id}" id="supplier" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <option value="">Select supplier</option>
+                                        <option th:each="supplier : ${suppliers}" 
+                                                th:value="${supplier.id}" 
+                                                th:text="${supplier.name}"></option>
+                                    </select>
+                                    <div th:if="${#fields.hasErrors('supplier')}" class="text-red-500 text-sm mt-1" th:errors="*{supplier}"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stock Management -->
+                        <div class="bg-white p-6 rounded-lg card-shadow mb-6">
+                            <h3 class="text-lg font-semibold custom-text mb-4">Stock Management</h3>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="minimumStockLevel" class="block text-sm font-medium custom-text mb-2">Minimum Stock Level *</label>
+                                    <input type="number" th:field="*{minimumStockLevel}" id="minimumStockLevel" min="0" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="0">
+                                    <div th:if="${#fields.hasErrors('minimumStockLevel')}" class="text-red-500 text-sm mt-1" th:errors="*{minimumStockLevel}"></div>
+                                </div>
+
+                                <div>
+                                    <label for="maximumStockLevel" class="block text-sm font-medium custom-text mb-2">Maximum Stock Level</label>
+                                    <input type="number" th:field="*{maximumStockLevel}" id="maximumStockLevel" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="0">
+                                    <div th:if="${#fields.hasErrors('maximumStockLevel')}" class="text-red-500 text-sm mt-1" th:errors="*{maximumStockLevel}"></div>
+                                </div>
+
+                                <div>
+                                    <label for="reorderPoint" class="block text-sm font-medium custom-text mb-2">Reorder Point</label>
+                                    <input type="number" th:field="*{reorderPoint}" id="reorderPoint" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="0">
+                                    <div th:if="${#fields.hasErrors('reorderPoint')}" class="text-red-500 text-sm mt-1" th:errors="*{reorderPoint}"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Product Image -->
+                        <div class="bg-white p-6 rounded-lg card-shadow mb-6">
+                            <h3 class="text-lg font-semibold custom-text mb-4">Product Image</h3>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="imageUrl" class="block text-sm font-medium custom-text mb-2">Image URL</label>
+                                    <input type="url" th:field="*{imageUrl}" id="imageUrl" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="https://example.com/image.jpg">
+                                    <div th:if="${#fields.hasErrors('imageUrl')}" class="text-red-500 text-sm mt-1" th:errors="*{imageUrl}"></div>
+                                </div>
+
+                                <div class="text-center">
+                                    <img id="imagePreview" th:src="${product.imageUrl != null ? product.imageUrl : '/images/default-product.png'}" alt="Product preview" class="mx-auto h-32 w-32 object-cover rounded-lg border border-gray-300">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Status -->
+                        <div class="bg-white p-6 rounded-lg card-shadow">
+                            <h3 class="text-lg font-semibold custom-text mb-4">Status</h3>
+
+                            <div class="flex items-center">
+                                <input type="checkbox" th:field="*{isActive}" id="isActive" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="isActive" class="ml-2 block text-sm custom-text">
+                                    Product is active
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-end space-x-4 mt-6">
+                    <a href="/products" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </a>
+                    <button type="submit" class="custom-highlight text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                        <i class="fas fa-save mr-2"></i>
+                        <span th:text="${product.id != null ? 'Update Product' : 'Save Product'}">Save Product</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sidebar JavaScript -->
+    <div th:replace="~{fragments/sidebar :: sidebar-js}"></div>
+
+    <script>
+        // Show/hide perishable fields based on checkbox
+        document.getElementById('isPerishable').addEventListener('change', function() {
+            const perishableFields = document.getElementById('perishableFields');
+            if (this.checked) {
+                perishableFields.style.display = 'grid';
+            } else {
+                perishableFields.style.display = 'none';
+            }
+        });
+
+        // Initialize perishable fields visibility on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const isPerishableCheckbox = document.getElementById('isPerishable');
+            const perishableFields = document.getElementById('perishableFields');
+
+            if (isPerishableCheckbox.checked) {
+                perishableFields.style.display = 'grid';
+            }
+        });
+
+        // Image preview functionality
+        document.getElementById('imageUrl').addEventListener('input', function() {
+            const imagePreview = document.getElementById('imagePreview');
+            const url = this.value;
+
+            if (url) {
+                imagePreview.src = url;
+                imagePreview.onerror = function() {
+                    this.src = '/images/default-product.png';
+                };
+            } else {
+                imagePreview.src = '/images/default-product.png';
+            }
+        });
+
+        // Auto-calculate profit margin
+        document.getElementById('cost').addEventListener('input', calculateMargin);
+        document.getElementById('price').addEventListener('input', calculateMargin);
+
+        function calculateMargin() {
+            const cost = parseFloat(document.getElementById('cost').value) || 0;
+            const price = parseFloat(document.getElementById('price').value) || 0;
+
+            if (cost > 0 && price > 0) {
+                const margin = ((price - cost) / price * 100).toFixed(2);
+                // You can display the margin somewhere if needed
+                console.log('Profit margin: ' + margin + '%');
+            }
+        }
+    </script>
+</body>
+
+</html>

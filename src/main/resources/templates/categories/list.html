@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category Management - Smart Inventory Management System</title>
+
+    <!-- CSRF Token for AJAX requests -->
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}"/>
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}"/>
+
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+
+    <style>
+         :root {
+            --bg-color: #F1F1F1;
+            --text-color: #202020;
+            --secondary-color: #7E909A;
+            --primary-color: #1C4E80;
+            --accent1-color: #A5D8DD;
+            --accent2-color: #EA6A47;
+            --highlight-color: #0091D5;
+        }
+        
+        .custom-bg {
+            background-color: var(--bg-color);
+        }
+        
+        .custom-text {
+            color: var(--text-color);
+        }
+        
+        .custom-secondary {
+            color: var(--secondary-color);
+        }
+        
+        .custom-primary {
+            background-color: var(--primary-color);
+        }
+        
+        .custom-highlight {
+            background-color: var(--highlight-color);
+        }
+        
+        .sidebar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0d3a5f 100%);
+            min-height: 100vh;
+            width: 280px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+        
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+
+<body class="custom-bg custom-text">
+    <!-- Sidebar -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div th:replace="~{fragments/sidebar :: header}"></div>
+
+        <!-- Category Management Content -->
+        <div class="p-6">
+            <!-- Page Header -->
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-3xl font-bold custom-text">Category Management</h1>
+                    <p class="custom-secondary mt-1">Organize your products with categories</p>
+                </div>
+                <div class="flex space-x-3">
+                    <a href="/categories/add" class="custom-highlight hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Add Category
+                    </a>
+                    <button onclick="openAddCategoryModal()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Quick Add
+                    </button>
+                </div>
+            </div>
+
+            <!-- Categories Grid -->
+            <div th:if="${categoryPage.hasContent()}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Dynamic Category Cards from Database -->
+                <div th:each="category : ${categoryPage.content}" class="bg-white p-6 rounded-lg card-shadow hover:shadow-lg transition-shadow">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-tag text-blue-600 text-xl"></i>
+                        </div>
+                        <div class="flex space-x-2">
+                            <a th:href="@{/categories/edit/{id}(id=${category.id})}" class="text-blue-600 hover:text-blue-800" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a th:href="@{/categories/view/{id}(id=${category.id})}" class="text-green-600 hover:text-green-800" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <button th:onclick="'deleteCategory(' + ${category.id} + ')'" class="text-red-600 hover:text-red-800" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-semibold custom-text mb-2" th:text="${category.name}">Category Name</h3>
+                    <p class="custom-secondary text-sm mb-1" th:
+                            <i class="fas fa-check-circle mr-1"></i>Active
+                        </span>
+                        <span th:unless="${category.isActive}" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <i class="fas fa-times-circle mr-1"></i>Inactive
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div th:if="${!categoryPage.hasContent()}" class="text-center py-12">
+                <i class="fas fa-folder-open text-4xl text-gray-400 mb-4"></i>
+                <h3 class="text-lg font-medium custom-text mb-2">No categories found</h3>
+                <p class="custom-secondary">Get started by creating your first category.</p>
+                <a href="/categories/add" class="custom-highlight text-white px-4 py-2 rounded-lg mt-4 inline-block">
+                    <i class="fas fa-plus mr-2"></i>Add Category
+                </a>
+            </div>
+
+            <!-- Pagination -->
+            <div th:if="${categoryPage.totalPages > 1}" class="mt-8 flex justify-center">
+                <nav class="flex items-center space-x-2">
+                    <!-- Previous Page -->
+                    <a th:if="${categoryPage.hasPrevious()}" 
+                       th:href="@{/categories(page=${categoryPage.number - 1}, size=${categoryPage.size})}" 
+                       class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 border border-gray-300 rounded-md">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                    
+                    <!-- Page Numbers -->
+                    <th:block th:each="i : ${#numbers.sequence(0, categoryPage.totalPages - 1)}">
+                        <a th:if="${i != categoryPage.number}" 
+                           th:href="@{/categories(page=${i}, size=${categoryPage.size})}" 
+                           th:text="${i + 1}"
+                           class="px-3 py-2 text-sm text-gray-700 hover:text-blue-600 border border-gray-300 rounded-md">1</a>
+                        <span th:if="${i == categoryPage.number}" 
+                              th:text="${i + 1}"
+                              class="px-3 py-2 text-sm text-white bg-blue-600 border border-blue-600 rounded-md">1</span>
+                    </th:block>
+                    
+                    <!-- Next Page -->
+                    <a th:if="${categoryPage.hasNext()}" 
+                       th:href="@{/categories(page=${categoryPage.number + 1}, size=${categoryPage.size})}" 
+                       class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 border border-gray-300 rounded-md">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Category Modal -->
+    <div id="categoryModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium custom-text" id="modalTitle">Add Category</h3>
+                    <button onclick="closeCategoryModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <form id="categoryForm">
+                    <input type="hidden" id="categoryId">
+
+                    <div class="mb-4">
+                        <label for="categoryName" class="block text-sm font-medium custom-text mb-2">Category Name *</label>
+                        <input type="text" id="categoryName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter category name">
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="categoryDescription" class="block text-sm font-medium custom-text mb-2">Description</label>
+                        <textarea id="categoryDescription" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter category description"></textarea>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="categoryActive" checked
+                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm custom-text">Category is active</span>
+                        </label>
+                    </div>
+
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeCategoryModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" class="custom-highlight text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                            <i class="fas fa-save mr-2"></i>Save Category
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar JavaScript -->
+    <div th:replace="~{fragments/sidebar :: sidebar-js}"></div>
+
+    <script>
+        // Modal functions
+        function openAddCategoryModal() {
+            document.getElementById('modalTitle').textContent = 'Add Category';
+            document.getElementById('categoryForm').reset();
+            document.getElementById('categoryId').value = '';
+            document.getElementById('categoryActive').checked = true;
+            document.getElementById('categoryModal').classList.remove('hidden');
+        }
+
+        function editCategory(id) {
+            document.getElementById('modalTitle').textContent = 'Edit Category';
+            document.getElementById('categoryId').value = id;
+
+            // Here you would normally fetch the category data
+            // For demo purposes, using sample data
+            if (id === 1) {
+                document.getElementById('categoryName').value = 'Electronics';
+                document.getElementById('categoryDescription').value = 'Electronic devices and accessories';
+                document.getElementById('categoryActive').checked = true;
+            }
+
+            document.getElementById('categoryModal').classList.remove('hidden');
+        }
+
+        function closeCategoryModal() {
+            document.getElementById('categoryModal').classList.add('hidden');
+        }
+
+        function deleteCategory(id) {
+            if (confirm('Are you sure you want to delete this category? This action cannot be undone.')) {
+                // Create a form to submit the delete request
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/categories/delete/' + id;
+
+                // Add CSRF token if needed (Spring Security)
+                const csrfToken = document.querySelector('meta[name="_csrf"]');
+                const csrfHeader = document.querySelector('meta[name="_csrf_header"]');
+                
+                if (csrfToken && csrfHeader) {
+                    const tokenField = document.createElement('input');
+                    tokenField.type = 'hidden';
+                    tokenField.name = '_csrf';
+                    tokenField.value = csrfToken.getAttribute('content');
+                    form.appendChild(tokenField);
+                }
+
+                // Submit the form
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        // Form submission
+        document.getElementById('categoryForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = {
+                id: document.getElementById('categoryId').value,
+                name: document.getElementById('categoryName').value,
+                description: document.getElementById('categoryDescription').value,
+                isActive: document.getElementById('categoryActive').checked
+            };
+
+            console.log('Saving category:', formData);
+
+            // Create a proper form submission
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/categories/save';
+
+            // Add form fields
+            if (formData.id) {
+                const idField = document.createElement('input');
+                idField.type = 'hidden';
+                idField.name = 'id';
+                idField.value = formData.id;
+                form.appendChild(idField);
+            }
+
+            const nameField = document.createElement('input');
+            nameField.type = 'hidden';
+            nameField.name = 'name';
+            nameField.value = formData.name;
+            form.appendChild(nameField);
+
+            const descField = document.createElement('input');
+            descField.type = 'hidden';
+            descField.name = 'description';
+            descField.value = formData.description;
+            form.appendChild(descField);
+
+            const activeField = document.createElement('input');
+            activeField.type = 'hidden';
+            activeField.name = 'isActive';
+            activeField.value = formData.isActive;
+            form.appendChild(activeField);
+
+            // Submit the form
+            document.body.appendChild(form);
+            form.submit();
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('categoryModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCategoryModal();
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeCategoryModal();
+            }
+        });
+    </script>
+</body>
+
+</html>

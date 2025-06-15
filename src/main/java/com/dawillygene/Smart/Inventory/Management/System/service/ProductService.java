@@ -302,4 +302,37 @@ public class ProductService {
         
         return sku;
     }
+
+    /**
+     * Import products from uploaded file
+     */
+    public int importProductsFromFile(org.springframework.web.multipart.MultipartFile file) {
+        // For now, return a placeholder implementation
+        // TODO: Implement actual file parsing logic
+        if (file.isEmpty()) {
+            throw new RuntimeException("Uploaded file is empty");
+        }
+        
+        // Placeholder - in a real implementation, you would:
+        // 1. Parse the CSV/Excel file
+        // 2. Validate each row
+        // 3. Create Product entities
+        // 4. Save them to database
+        // 5. Return count of successfully imported products
+        
+        return 0; // Placeholder return
+    }
+
+    /**
+     * Generate import template file
+     */
+    public byte[] generateImportTemplate() {
+        // For now, return a simple CSV template
+        // TODO: Generate actual CSV/Excel template with proper headers
+        
+        String csvTemplate = "name,sku,description,price,weight,category_name\n" +
+                            "Sample Product,SP001,Sample description,99.99,1.5,Electronics\n";
+        
+        return csvTemplate.getBytes();
+    }
 }

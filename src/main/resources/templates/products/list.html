@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Management - Smart Inventory Management System</title>
+
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+
+    <style>
+         :root {
+            --bg-color: #F1F1F1;
+            --text-color: #202020;
+            --secondary-color: #7E909A;
+            --primary-color: #1C4E80;
+            --accent1-color: #A5D8DD;
+            --accent2-color: #EA6A47;
+            --highlight-color: #0091D5;
+        }
+        
+        .custom-bg {
+            background-color: var(--bg-color);
+        }
+        
+        .custom-text {
+            color: var(--text-color);
+        }
+        
+        .custom-secondary {
+            color: var(--secondary-color);
+        }
+        
+        .custom-primary {
+            background-color: var(--primary-color);
+        }
+        
+        .custom-accent1 {
+            background-color: var(--accent1-color);
+        }
+        
+        .custom-accent2 {
+            background-color: var(--accent2-color);
+        }
+        
+        .custom-highlight {
+            background-color: var(--highlight-color);
+        }
+        
+        .sidebar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0d3a5f 100%);
+            min-height: 100vh;
+            width: 280px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+        
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+
+<body class="custom-bg custom-text">
+    <!-- Sidebar -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div th:replace="~{fragments/sidebar :: header}"></div>
+
+        <!-- Product Management Content -->
+        <div class="p-6">
+            <!-- Page Header -->
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-3xl font-bold custom-text">Product Management</h1>
+                    <p class="custom-secondary mt-1">Manage your product inventory and information</p>
+                </div>
+                <div class="flex space-x-3">
+                    <a href="/products/bulk-import" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-upload mr-2"></i>Bulk Import
+                    </a>
+                    <a href="/products/add" class="custom-highlight hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Add Product
+                    </a>
+                </div>
+            </div>
+
+            <!-- Alert Messages -->
+            <div th:if="${success}" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+                <div class="flex">
+                    <i class="fas fa-check-circle mr-2 mt-1"></i>
+                    <span th:text="${success}"></span>
+                </div>
+            </div>
+
+            <div th:if="${error}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                <div class="flex">
+                    <i class="fas fa-exclamation-circle mr-2 mt-1"></i>
+                    <span th:text="${error}"></span>
+                </div>
+            </div>
+
+            <!-- Search and Filter Section -->
+            <div class="bg-white p-6 rounded-lg card-shadow mb-6">
+                <form method="get" action="/products" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium custom-text mb-2">Search Products</label>
+                        <div class="relative">
+                            <input type="text" name="search" th:value="${search}" placeholder="Search by name, SKU, or description..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium custom-text mb-2">Category</label>
+                        <select name="categoryId" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">All Categories</option>
+                            <option th:each="category : ${categories}" 
+                                    th:value="${category.id}" 
+                                    th:text="${category.name}"
+                                    th:selected="${category.id == selectedCategoryId}"></option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium custom-text mb-2">Supplier</label>
+                        <select name="supplierId" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">All Suppliers</option>
+                            <option th:each="supplier : ${suppliers}" 
+                                    th:value="${supplier.id}" 
+                                    th:text="${supplier.name}"
+                                    th:selected="${supplier.id == selectedSupplierId}"></option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-end space-x-2">
+                        <button type="submit" class="flex-1 custom-highlight text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                            <i class="fas fa-search mr-2"></i>Search
+                        </button>
+                        <a href="/products" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Products Table -->
+            <div class="bg-white rounded-lg card-shadow overflow-hidden">
+                <div class="p-4 border-b border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-semibold custom-text">Products</h3>
+                        <div class="text-sm custom-secondary">
+                            Total: <span th:text="${productPage.totalElements}">0</span> products
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <a th:href="@{/products(page=${currentPage}, sortBy='sku', sortDir=${sortBy == 'sku' and sortDir == 'asc' ? 'desc' : 'asc'}, search=${search}, categoryId=${selectedCategoryId}, supplierId=${selectedSupplierId})}" class="flex items-center hover:text-gray-700">
+                                        SKU
+                                        <i class="fas fa-sort ml-1" th:class="${sortBy == 'sku' ? (sortDir == 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down') : 'fas fa-sort'}"></i>
+                                    </a>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <a th:href="@{/products(page=${currentPage}, sortBy='name', sortDir=${sortBy == 'name' and sortDir == 'asc' ? 'desc' : 'asc'}, search=${search}, categoryId=${selectedCategoryId}, supplierId=${selectedSupplierId})}" class="flex items-center hover:text-gray-700">
+                                        Product Name
+                                        <i class="fas fa-sort ml-1" th:class="${sortBy == 'name' ? (sortDir == 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down') : 'fas fa-sort'}"></i>
+                                    </a>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supplier</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <a th:href="@{/products(page=${currentPage}, sortBy='price', sortDir=${sortBy == 'price' and sortDir == 'asc' ? 'desc' : 'asc'}, search=${search}, categoryId=${selectedCategoryId}, supplierId=${selectedSupplierId})}" class="flex items-center hover:text-gray-700">
+                                        Price
+                                        <i class="fas fa-sort ml-1" th:class="${sortBy == 'price' ? (sortDir == 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down') : 'fas fa-sort'}"></i>
+                                    </a>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr th:each="product : ${productPage.content}" class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium custom-text" th:text="${product.sku}">SKU001</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10">
+                                            <img class="h-10 w-10 rounded-full object-cover" th:src="${product.imageUrl != null ? product.imageUrl : '/images/default-product.png'}" alt="Product image">
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium custom-text" th:text="${product.name}">Product Name</div>
+                                            <div class="text-sm custom-secondary" th:text="${#strings.abbreviate(product.description, 50)}">Description</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800" th:text="${product.category?.name ?: 'No Category'}">Category</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm custom-text" th:text="${product.supplier?.name ?: 'No Supplier'}">Supplier</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium custom-text" th:text="'$' + ${#numbers.formatDecimal(product.price, 1, 2)}">$0.00</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="text-sm font-medium custom-text" th:text="${product.inventory?.quantity ?: 0}">0</div>
+                                        <span th:if="${product.inventory != null and product.inventory.quantity <= product.minimumStockLevel}" class="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            Low Stock
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span th:if="${product.isActive}" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Active
+                                    </span>
+                                    <span th:unless="${product.isActive}" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        Inactive
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div class="flex space-x-2">
+                                        <a th:href="@{/products/view/{id}(id=${product.id})}" class="text-blue-600 hover:text-blue-800" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a th:href="@{/products/edit/{id}(id=${product.id})}" class="text-indigo-600 hover:text-indigo-800" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form th:action="@{/products/toggle-status/{id}(id=${product.id})}" method="post" class="inline">
+                                            <button type="submit" th:class="${product.isActive ? 'text-yellow-600 hover:text-yellow-800' : 'text-green-600 hover:text-green-800'}" th:title="${product.isActive ? 'Deactivate' : 'Activate'}">
+                                                <i th:class="${product.isActive ? 'fas fa-pause' : 'fas fa-play'}"></i>
+                                            </button>
+                                        </form>
+                                        <form th:action="@{/products/delete/{id}(id=${product.id})}" method="post" class="inline" onsubmit="return confirm('Are you sure you want to delete this product?')">
+                                            <button type="submit" class="text-red-600 hover:text-red-800" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div th:if="${productPage.totalPages > 1}" class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1 flex justify-between sm:hidden">
+                            <a th:if="${productPage.hasPrevious()}" th:href="@{/products(page=${currentPage - 1}, sortBy=${sortBy}, sortDir=${sortDir}, search=${search}, categoryId=${selectedCategoryId}, supplierId=${selectedSupplierId})}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                Previous
+                            </a>
+                            <a th:if="${productPage.hasNext()}" th:href="@{/products(page=${currentPage + 1}, sortBy=${sortBy}, sortDir=${sortDir}, search=${search}, categoryId=${selectedCategoryId}, supplierId=${selectedSupplierId})}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                Next
+                            </a>
+                        </div>
+                        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                            <div>
+                                <p class="text-sm text-gray-700">
+                                    Showing
+                                    <span class="font-medium" th:text="${currentPage * productPage.size + 1}">1</span> to
+                                    <span class="font-medium" th:text="${(currentPage + 1) * productPage.size > productPage.totalElements ? productPage.totalElements : (currentPage + 1) * productPage.size}">10</span> of
+                                    <span class="font-medium" th:text="${productPage.totalElements}">97</span> results
+                                </p>
+                            </div>
+                            <div>
+                                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                                    <!-- Previous Page Link -->
+                                    <a th:if="${productPage.hasPrevious()}" th:href="@{/products(page=${currentPage - 1}, sortBy=${sortBy}, sortDir=${sortDir}, search=${search}, categoryId=${selectedCategoryId}, supplierId=${selectedSupplierId})}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+
+                                    <!-- Page Numbers -->
+                                    <th:block th:each="i : ${#numbers.sequence(0, productPage.totalPages - 1)}">
+                                        <a th:if="${i == currentPage}" class="bg-blue-50 border-blue-500 text-blue-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                            <span th:text="${i + 1}">1</span>
+                                        </a>
+                                        <a th:unless="${i == currentPage}" th:href="@{/products(page=${i}, sortBy=${sortBy}, sortDir=${sortDir}, search=${search}, categoryId=${selectedCategoryId}, supplierId=${selectedSupplierId})}" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                            <span th:text="${i + 1}">1</span>
+                                        </a>
+                                    </th:block>
+
+                                    <!-- Next Page Link -->
+                                    <a th:if="${productPage.hasNext()}" th:href="@{/products(page=${currentPage + 1}, sortBy=${sortBy}, sortDir=${sortDir}, search=${search}, categoryId=${selectedCategoryId}, supplierId=${selectedSupplierId})}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div th:if="${productPage.content.empty}" class="text-center py-12">
+                    <i class="fas fa-box text-4xl text-gray-400 mb-4"></i>
+                    <h3 class="text-lg font-medium custom-text mb-2">No products found</h3>
+                    <p class="custom-secondary">Get started by adding your first product.</p>
+                    <a href="/products/add" class="custom-highlight text-white px-4 py-2 rounded-lg mt-4 inline-block">
+                        <i class="fas fa-plus mr-2"></i>Add Product
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar JavaScript -->
+    <div th:replace="~{fragments/sidebar :: sidebar-js}"></div>
+</body>
+
+</html>

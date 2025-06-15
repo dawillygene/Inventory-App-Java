@@ -94,6 +94,7 @@ public class CategoryService {
         
         // Update fields
         category.setName(categoryDetails.getName());
+        category.setCode(categoryDetails.getCode());
         category.setDescription(categoryDetails.getDescription());
         category.setIsActive(categoryDetails.getIsActive());
         
@@ -130,6 +131,10 @@ public class CategoryService {
             throw new RuntimeException("Category name cannot exceed 100 characters");
         }
         
+        if (category.getCode() != null && category.getCode().length() > 20) {
+            throw new RuntimeException("Category code cannot exceed 20 characters");
+        }
+        
         if (category.getDescription() != null && category.getDescription().length() > 500) {
             throw new RuntimeException("Category description cannot exceed 500 characters");
         }
@@ -140,5 +145,44 @@ public class CategoryService {
      */
     public boolean existsByName(String name) {
         return categoryRepository.findByName(name).isPresent();
+    }
+
+    /**
+     * Find category by ID (throwing exception if not found)
+     */
+    public Category findCategoryById(Long id) {
+        return categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Category not found with ID: " + id));
+    }
+
+    /**
+     * Check if another category with the same name exists (excluding current id)
+     */
+    public boolean existsByNameAndNotId(String name, Long id) {
+        Optional<Category> existingCategory = categoryRepository.findByName(name);
+        return existingCategory.isPresent() && !existingCategory.get().getId().equals(id);
+    }
+
+    /**
+     * Save category (wrapper for create/update)
+     */
+    public Category saveCategory(Category category) {
+        // Validate required fields
+        validateCategory(category);
+        
+        // Set default values if needed
+        if (category.getIsActive() == null) {
+            category.setIsActive(true);
+        }
+        
+        return categoryRepository.save(category);
+    }
+
+    /**
+     * Get product count for a category
+     */
+    public long getProductCountByCategory(Long categoryId) {
+        Category category = findCategoryById(categoryId);
+        return category.getProducts() != null ? category.getProducts().size() : 0;
     }
 }

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Product Details - ' + ${product.name} + ' - Smart Inventory Management System'">Product Details - Smart Inventory Management System</title>
+
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+         :root {
+            --bg-color: #F1F1F1;
+            --text-color: #202020;
+            --secondary-color: #7E909A;
+            --primary-color: #1C4E80;
+            --accent1-color: #A5D8DD;
+            --accent2-color: #EA6A47;
+            --highlight-color: #0091D5;
+        }
+        
+        .custom-bg {
+            background-color: var(--bg-color);
+        }
+        
+        .custom-text {
+            color: var(--text-color);
+        }
+        
+        .custom-secondary {
+            color: var(--secondary-color);
+        }
+        
+        .custom-primary {
+            background-color: var(--primary-color);
+        }
+        
+        .custom-highlight {
+            background-color: var(--highlight-color);
+        }
+        
+        .sidebar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0d3a5f 100%);
+            min-height: 100vh;
+            width: 280px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+        
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+
+<body class="custom-bg custom-text">
+    <!-- Sidebar -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div th:replace="~{fragments/sidebar :: header}"></div>
+
+        <!-- Product Details Content -->
+        <div class="p-6">
+            <!-- Page Header -->
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-3xl font-bold custom-text" th:text="${product.name}">Product Name</h1>
+                    <p class="custom-secondary mt-1">Product details and information</p>
+                </div>
+                <div class="flex space-x-3">
+                    <a href="/products" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Products
+                    </a>
+                    <a th:href="@{/products/edit/{id}(id=${product.id})}" class="custom-highlight hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-edit mr-2"></i>Edit Product
+                    </a>
+                </div>
+            </div>
+
+            <!-- Alert Messages -->
+            <div th:if="${error}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                <div class="flex">
+                    <i class="fas fa-exclamation-circle mr-2 mt-1"></i>
+                    <span th:text="${error}"></span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Main Product Information -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Basic Information -->
+                    <div class="bg-white p-6 rounded-lg card-shadow">
+                        <h3 class="text-lg font-semibold custom-text mb-4 flex items-center">
+                            <i class="fas fa-info-circle mr-2 text-blue-500"></i> Basic Information
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium custom-secondary">Product Name</label>
+                                    <p class="text-lg font-medium custom-text" th:text="${product.name}">Product Name</p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium custom-secondary">SKU</label>
+                                    <p class="text-lg font-medium custom-text" th:text="${product.sku}">SKU001</p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium custom-secondary">Barcode</label>
+                                    <p class="text-lg custom-text" th:text="${product.barcode ?: 'Not specified'}">Not specified</p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium custom-secondary">Unit of Measure</label>
+                                    <p class="text-lg custom-text" th:text="${product.unitOfMeasure ?: 'Not specified'}">Not specified</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium custom-secondary">Category</label>
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800" th:text="${product.category?.name ?: 'No Category'}">Category</span>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium custom-secondary">Supplier</label>
+                                    <p class="text-lg custom-text" th:text="${product.supplier?.name ?: 'No Supplier'}">Supplier Name</p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium custom-secondary">Status</label>
+                                    <span th:if="${product.isActive}" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                        <i class="fas fa-check-circle mr-1"></i>Active
+                                    </span>
+                                    <span th:unless="${product.isActive}" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                                        <i class="fas fa-times-circle mr-1"></i>Inactive
+                                    </span>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium custom-secondary">Created</label>
+                                    <p class="text-lg custom-text" th:text="${#temporals.format(product.createdAt, 'MMM dd, yyyy HH:mm')}">Jan 01, 2024 10:00</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6" th:if="${product.description}">
+                            <label class="block text-sm font-medium custom-secondary">Description</label>
+                            <p class="mt-2 text-gray-700" th:text="${product.description}">Product description goes here...</p>
+                        </div>
+                    </div>
+
+                    <!-- Pricing Information -->
+                    <div class="bg-white p-6 rounded-lg card-shadow">
+                        <h3 class="text-lg font-semibold custom-text mb-4 flex items-center">
+                            <i class="fas fa-dollar-sign mr-2 text-green-500"></i> Pricing Information
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="text-center p-4 bg-gray-50 rounded-lg">
+                                <i class="fas fa-shopping-cart text-2xl text-gray-600 mb-2"></i>
+                                <p class="text-sm font-medium custom-secondary">Cost Price</p>
+                                <p class="text-2xl font-bold text-gray-800" th:text="'$' + ${#numbers.formatDecimal(product.cost, 1, 2)}">$0.00</p>
+                            </div>
+
+                            <div class="text-center p-4 bg-green-50 rounded-lg">
+                                <i class="fas fa-tag text-2xl text-green-600 mb-2"></i>
+                                <p class="text-sm font-medium custom-secondary">Selling Price</p>
+                                <p class="text-2xl font-bold text-green-800" th:text="'$' + ${#numbers.formatDecimal(product.price, 1, 2)}">$0.00</p>
+                            </div>
+
+                            <div class="text-center p-4 bg-blue-50 rounded-lg">
+                                <i class="fas fa-chart-line text-2xl text-blue-600 mb-2"></i>
+                                <p class="text-sm font-medium custom-secondary">Profit Margin</p>
+                                <p class="text-2xl font-bold text-blue-800" th:text="${product.cost > 0 ? #numbers.formatDecimal((product.price - product.cost) / product.price * 100, 1, 1) + '%' : 'N/A'}">0.0%</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Physical Properties -->
+                    <div class="bg-white p-6 rounded-lg card-shadow" th:if="${product.weightKg != null or product.dimensions != null}">
+                        <h3 class="text-lg font-semibold custom-text mb-4 flex items-center">
+                            <i class="fas fa-ruler-combined mr-2 text-purple-500"></i> Physical Properties
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div th:if="${product.weightKg != null}">
+                                <label class="block text-sm font-medium custom-secondary">Weight</label>
+                                <p class="text-lg custom-text" th:text="${product.weightKg} + ' kg'">0.00 kg</p>
+                            </div>
+
+                            <div th:if="${product.dimensions != null}">
+                                <label class="block text-sm font-medium custom-secondary">Dimensions</label>
+                                <p class="text-lg custom-text" th:text="${product.dimensions}">Not specified</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Perishable Information -->
+                    <div class="bg-white p-6 rounded-lg card-shadow" th:if="${product.isPerishable}">
+                        <h3 class="text-lg font-semibold custom-text mb-4 flex items-center">
+                            <i class="fas fa-clock mr-2 text-orange-500"></i> Perishable Information
+                        </h3>
+
+                        <div class="flex items-center space-x-6">
+                            <div class="flex items-center">
+                                <i class="fas fa-exclamation-triangle text-orange-500 mr-2"></i>
+                                <span class="text-orange-700 font-medium">This product is perishable</span>
+                            </div>
+
+                            <div th:if="${product.shelfLifeDays != null}">
+                                <label class="block text-sm font-medium custom-secondary">Shelf Life</label>
+                                <p class="text-lg custom-text" th:text="${product.shelfLifeDays} + ' days'">0 days</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stock Movement History -->
+                    <div class="bg-white p-6 rounded-lg card-shadow">
+                        <h3 class="text-lg font-semibold custom-text mb-4 flex items-center">
+                            <i class="fas fa-history mr-2 text-indigo-500"></i> Stock Movement History
+                        </h3>
+
+                        <div class="text-center py-8">
+                            <i class="fas fa-chart-line text-4xl text-gray-400 mb-4"></i>
+                            <p class="text-gray-500">Stock movement history will be displayed here</p>
+                            <p class="text-sm text-gray-400 mt-2">Integration with inventory tracking system</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar Information -->
+                <div class="lg:col-span-1 space-y-6">
+                    <!-- Product Image -->
+                    <div class="bg-white p-6 rounded-lg card-shadow">
+                        <h3 class="text-lg font-semibold custom-text mb-4 flex items-center">
+                            <i class="fas fa-image mr-2 text-pink-500"></i> Product Image
+                        </h3>
+
+                        <div class="text-center">
+                            <img th:src="${product.imageUrl != null ? product.imageUrl : '/images/default-product.png'}" alt="Product image" class="mx-auto h-64 w-full object-cover rounded-lg border border-gray-300">
+                        </div>
+                    </div>
+
+                    <!-- Stock Information -->
+                    <div class="bg-white p-6 rounded-lg card-shadow">
+                        <h3 class="text-lg font-semibold custom-text mb-4 flex items-center">
+                            <i class="fas fa-warehouse mr-2 text-teal-500"></i> Stock Information
+                        </h3>
+
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                <span class="text-sm font-medium custom-secondary">Current Stock</span>
+                                <span class="text-lg font-bold custom-text" th:text="${currentStock ?: 0}">0</span>
+                            </div>
+
+                            <div class="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+                                <span class="text-sm font-medium custom-secondary">Minimum Level</span>
+                                <span class="text-lg font-bold text-red-600" th:text="${product.minimumStockLevel}">0</span>
+                            </div>
+
+                            <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg" th:if="${product.maximumStockLevel != null}">
+                                <span class="text-sm font-medium custom-secondary">Maximum Level</span>
+                                <span class="text-lg font-bold text-green-600" th:text="${product.maximumStockLevel}">0</span>
+                            </div>
+
+                            <div class="flex justify-between items-center p-3 bg-yellow-50 rounded-lg" th:if="${product.reorderPoint != null}">
+                                <span class="text-sm font-medium custom-secondary">Reorder Point</span>
+                                <span class="text-lg font-bold text-yellow-600" th:text="${product.reorderPoint}">0</span>
+                            </div>
+                        </div>
+
+                        <!-- Stock Status Alert -->
+                        <div th:if="${currentStock != null and currentStock <= product.minimumStockLevel}" class="mt-4 p-3 bg-red-100 border border-red-300 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>
+                                <span class="text-red-700 font-medium">Low Stock Alert</span>
+                            </div>
+                            <p class="text-red-600 text-sm mt-1">Current stock is below minimum level</p>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="bg-white p-6 rounded-lg card-shadow">
+                        <h3 class="text-lg font-semibold custom-text mb-4 flex items-center">
+                            <i class="fas fa-bolt mr-2 text-yellow-500"></i> Quick Actions
+                        </h3>
+
+                        <div class="space-y-3">
+                            <a th:href="@{/products/edit/{id}(id=${product.id})}" class="w-full flex items-center justify-center px-4 py-2 border border-blue-500 text-blue-500 rounded-lg hover:bg-blue-50 transition-colors">
+                                <i class="fas fa-edit mr-2"></i>Edit Product
+                            </a>
+
+                            <a href="#" class="w-full flex items-center justify-center px-4 py-2 border border-green-500 text-green-500 rounded-lg hover:bg-green-50 transition-colors">
+                                <i class="fas fa-plus mr-2"></i>Adjust Stock
+                            </a>
+
+                            <a href="#" class="w-full flex items-center justify-center px-4 py-2 border border-purple-500 text-purple-500 rounded-lg hover:bg-purple-50 transition-colors">
+                                <i class="fas fa-shopping-cart mr-2"></i>Create Order
+                            </a>
+
+                            <form th:action="@{/products/toggle-status/{id}(id=${product.id})}" method="post">
+                                <button type="submit" th:class="${product.isActive ? 'w-full flex items-center justify-center px-4 py-2 border border-yellow-500 text-yellow-500 rounded-lg hover:bg-yellow-50 transition-colors' : 'w-full flex items-center justify-center px-4 py-2 border border-green-500 text-green-500 rounded-lg hover:bg-green-50 transition-colors'}">
+                                    <i th:class="${product.isActive ? 'fas fa-pause mr-2' : 'fas fa-play mr-2'}"></i>
+                                    <span th:text="${product.isActive ? 'Deactivate' : 'Activate'}">Toggle Status</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Supplier Information -->
+                    <div class="bg-white p-6 rounded-lg card-shadow" th:if="${product.supplier != null}">
+                        <h3 class="text-lg font-semibold custom-text mb-4 flex items-center">
+                            <i class="fas fa-truck mr-2 text-blue-500"></i> Supplier Information
+                        </h3>
+
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium custom-secondary">Supplier Name</label>
+                                <p class="text-lg custom-text" th:text="${product.supplier.name}">Supplier Name</p>
+                            </div>
+
+                            <div th:if="${product.supplier.contactPerson}">
+                                <label class="block text-sm font-medium custom-secondary">Contact Person</label>
+                                <p class="custom-text" th:text="${product.supplier.contactPerson}">Contact Person</p>
+                            </div>
+
+                            <div th:if="${product.supplier.email}">
+                                <label class="block text-sm font-medium custom-secondary">Email</label>
+                                <a th:href="'mailto:' + ${product.supplier.email}" class="text-blue-600 hover:text-blue-800" th:text="${product.supplier.email}">email@example.com</a>
+                            </div>
+
+                            <div th:if="${product.supplier.phoneNumber}">
+                                <label class="block text-sm font-medium custom-secondary">Phone</label>
+                                <a th:href="'tel:' + ${product.supplier.phoneNumber}" class="text-blue-600 hover:text-blue-800" th:text="${product.supplier.phoneNumber}">Phone Number</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar JavaScript -->
+    <div th:replace="~{fragments/sidebar :: sidebar-js}"></div>
+</body>
+
+</html>

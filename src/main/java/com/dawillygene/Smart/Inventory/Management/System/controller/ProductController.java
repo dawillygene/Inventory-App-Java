@@ -11,13 +11,19 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.validation.Valid;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -230,5 +236,66 @@ public class ProductController {
     @ResponseBody
     public List<Product> getProductsBySupplier(@PathVariable Long supplierId) {
         return productService.findActiveProductsBySupplier(supplierId);
+    }
+
+    /**
+     * Show bulk import page
+     */
+    @GetMapping("/bulk-import")
+    public String showBulkImportPage(Model model) {
+        model.addAttribute("categories", categoryService.findAllActiveCategories());
+        model.addAttribute("suppliers", supplierService.findAllActiveSuppliers());
+        return "products/bulk-import";
+    }
+
+    /**
+     * Handle bulk import via CSV/Excel file
+     */
+    @PostMapping("/bulk-import")
+    public String handleBulkImport(@RequestParam("file") MultipartFile file,
+                                 RedirectAttributes redirectAttributes) {
+        
+        if (file.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Please select a file to upload.");
+            return "redirect:/products/bulk-import";
+        }
+
+        String fileName = file.getOriginalFilename();
+        if (fileName == null || (!fileName.toLowerCase().endsWith(".csv") && 
+                                !fileName.toLowerCase().endsWith(".xlsx") && 
+                                !fileName.toLowerCase().endsWith(".xls"))) {
+            redirectAttributes.addFlashAttribute("error", 
+                "Please upload a valid CSV or Excel file (.csv, .xlsx, .xls).");
+            return "redirect:/products/bulk-import";
+        }
+
+        try {
+            int importedCount = productService.importProductsFromFile(file);
+            redirectAttributes.addFlashAttribute("success", 
+                "Successfully imported " + importedCount + " products!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", 
+                "Error importing products: " + e.getMessage());
+        }
+
+        return "redirect:/products";
+    }
+
+    /**
+     * Download sample CSV template for bulk import
+     */
+    @GetMapping("/bulk-import/template")
+    public ResponseEntity<byte[]> downloadImportTemplate() {
+        try {
+            byte[] csvTemplate = productService.generateImportTemplate();
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType("text/csv"));
+            headers.setContentDispositionFormData("attachment", "product_import_template.csv");
+            
+            return new ResponseEntity<>(csvTemplate, headers, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }
