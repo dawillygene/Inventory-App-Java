@@ -202,7 +202,7 @@
             <div class="bg-white p-6 rounded-lg card-shadow">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-semibold custom-text">Recent Products</h3>
-                    <a href="/products/new" class="custom-highlight text-white px-4 py-2 rounded-lg text-sm no-underline">
+                    <a href="/products/add" class="custom-highlight text-white px-4 py-2 rounded-lg text-sm no-underline">
                         <i class="fas fa-plus mr-2"></i>Add Product
                     </a>
                 </div>
@@ -239,7 +239,7 @@
                 <div th:if="${recentProducts == null or recentProducts.empty}" class="text-center py-8">
                     <i class="fas fa-box text-4xl text-gray-400 mb-4"></i>
                     <p class="text-gray-500">No products found. Start by adding your first product.</p>
-                    <a href="/products/new" class="custom-highlight text-white px-4 py-2 rounded-lg text-sm no-underline mt-4 inline-block">
+                    <a href="/products/add" class="custom-highlight text-white px-4 py-2 rounded-lg text-sm no-underline mt-4 inline-block">
                         <i class="fas fa-plus mr-2"></i>Add First Product
                     </a>
                 </div>
@@ -247,7 +247,7 @@
 
             <!-- Quick Actions -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <a href="/products/new" class="bg-white p-6 rounded-lg card-shadow text-center hover:shadow-lg transition-shadow no-underline">
+                <a href="/products/add" class="bg-white p-6 rounded-lg card-shadow text-center hover:shadow-lg transition-shadow no-underline">
                     <i class="fas fa-plus-circle text-3xl custom-highlight mb-3"></i>
                     <h3 class="font-semibold custom-text">Add Product</h3>
                     <p class="text-sm custom-secondary">Create new product</p>

@@ -10,6 +10,8 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
          :root {
@@ -49,6 +51,39 @@
         .custom-highlight {
             background-color: var(--highlight-color);
         }
+        
+        .sidebar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0d3a5f 100%);
+            min-height: 100vh;
+            width: 280px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+        
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
     </style>
 </head>
 
@@ -58,9 +93,9 @@
         <div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
         <!-- Main Content -->
-        <div class="flex-1 flex flex-col overflow-hidden">
+        <div class="main-content">
             <!-- Header -->
-            <div th:replace="~{fragments/layout :: header}"></div>
+            <div th:replace="~{fragments/sidebar :: header}"></div>
 
             <!-- Main Content Area -->
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-6">
@@ -217,6 +252,9 @@
             </main>
         </div>
     </div>
+
+    <!-- Include sidebar JavaScript -->
+    <div th:replace="~{fragments/sidebar :: sidebar-js}"></div>
 </body>
 
 </html>

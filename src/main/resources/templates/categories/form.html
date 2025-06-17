@@ -10,6 +10,8 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
          :root {
@@ -49,6 +51,71 @@
         .custom-highlight {
             background-color: var(--highlight-color);
         }
+        
+        .sidebar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0d3a5f 100%);
+            min-height: 100vh;
+            width: 280px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .main-content {
+                padding: 1.5rem;
+            }
+            main {
+                padding: 2rem !important;
+            }
+        }
+        
+        @media (min-width: 1280px) {
+            .main-content {
+                padding: 2rem;
+            }
+            main {
+                padding: 3rem !important;
+            }
+        }
+        
+        @media (min-width: 1536px) {
+            main {
+                padding: 4rem !important;
+            }
+        }
+        /* Full screen form styles */
+        
+        .full-screen-form {
+            min-height: calc(100vh - 200px);
+        }
     </style>
 </head>
 
@@ -58,13 +125,13 @@
         <div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
         <!-- Main Content -->
-        <div class="flex-1 flex flex-col overflow-hidden">
+        <div class="main-content">
             <!-- Header -->
-            <div th:replace="~{fragments/layout :: header}"></div>
+            <div th:replace="~{fragments/sidebar :: header}"></div>
 
             <!-- Main Content Area -->
-            <main class="flex-1 overflow-x-hidden overflow-y-auto p-6">
-                <div class="max-w-4xl mx-auto">
+            <main class="flex-1 p-6 min-h-screen flex flex-col">
+                <div class="w-full h-full flex flex-col flex-1">
                     <!-- Breadcrumb -->
                     <nav class="mb-6" aria-label="Breadcrumb">
                         <ol class="flex items-center space-x-2 text-sm custom-secondary">
@@ -103,99 +170,144 @@
                     </div>
 
                     <!-- Category Form -->
-                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                        <div class="p-6">
-                            <form th:action="@{/categories/save}" th:object="${category}" method="post" class="space-y-6">
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden h-auto min-h-0 flex-1 full-screen-form">
+                        <div class="p-8 h-full">
+                            <form th:action="@{/categories/save}" th:object="${category}" method="post" class="space-y-8 h-full flex flex-col">
                                 <!-- Hidden ID field for editing -->
                                 <input type="hidden" th:field="*{id}" th:if="${isEdit}">
 
-                                <!-- Category Name -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label for="name" class="block text-sm font-medium custom-text mb-2">
-                                            Category Name <span class="text-red-500">*</span>
+                                <!-- Form Content -->
+                                <div class="flex-1 space-y-8">
+
+                                    <!-- Form Content -->
+                                    <div class="flex-1 space-y-8">
+                                        <!-- Category Basic Information -->
+                                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                            <!-- Category Name -->
+                                            <div>
+                                                <label for="name" class="block text-sm font-medium custom-text mb-3">
+                                                Category Name <span class="text-red-500">*</span>
+                                            </label>
+                                                <input type="text" th:field="*{name}" id="name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg" placeholder="Enter category name" required>
+                                                <p th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="mt-2 text-sm text-red-600"></p>
+                                            </div>
+
+                                            <!-- Category Code -->
+                                            <div>
+                                                <label for="code" class="block text-sm font-medium custom-text mb-3">
+                                                Category Code
+                                            </label>
+                                                <input type="text" th:field="*{code}" id="code" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg" placeholder="Enter category code (optional)">
+                                                <p th:if="${#fields.hasErrors('code')}" th:errors="*{code}" class="mt-2 text-sm text-red-600"></p>
+                                                <p class="mt-2 text-sm custom-secondary">Optional short code for quick identification</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Description -->
+                                        <div>
+                                            <label for="description" class="block text-sm font-medium custom-text mb-3">
+                                            Description
                                         </label>
-                                        <input type="text" th:field="*{name}" id="name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter category name" required>
-                                        <p th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="mt-1 text-sm text-red-600"></p>
+                                            <textarea th:field="*{description}" id="description" rows="8" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none" placeholder="Enter detailed category description"></textarea>
+                                            <p th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="mt-2 text-sm text-red-600"></p>
+                                            <p class="mt-2 text-sm custom-secondary">Provide a detailed description to help users understand this category's purpose</p>
+                                        </div>
+
+                                        <!-- Active Status & Additional Settings -->
+                                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                            <!-- Active Status -->
+                                            <div class="bg-gray-50 p-6 rounded-lg h-full">
+                                                <h4 class="text-lg font-medium custom-text mb-4">Category Status</h4>
+                                                <label class="flex items-center">
+                                                <input type="checkbox" 
+                                                       th:field="*{isActive}" 
+                                                       class="w-5 h-5 rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                                <span class="ml-3 text-base custom-text">Active Category</span>
+                                            </label>
+                                                <p class="mt-3 text-sm custom-secondary">Inactive categories won't appear in product forms and dropdown lists</p>
+                                            </div>
+
+                                            <!-- Future Settings Placeholder -->
+                                            <div class="bg-blue-50 p-6 rounded-lg h-full">
+                                                <h4 class="text-lg font-medium custom-text mb-4">Quick Info</h4>
+                                                <div class="space-y-2 text-sm custom-secondary">
+                                                    <p><i class="fas fa-info-circle mr-2"></i>Categories help organize products</p>
+                                                    <p><i class="fas fa-tag mr-2"></i>Use descriptive names for better organization</p>
+                                                    <p><i class="fas fa-code mr-2"></i>Category codes are useful for reporting</p>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <!-- Category Code -->
-                                    <div>
-                                        <label for="code" class="block text-sm font-medium custom-text mb-2">
-                                            Category Code
-                                        </label>
-                                        <input type="text" th:field="*{code}" id="code" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter category code (optional)">
-                                        <p th:if="${#fields.hasErrors('code')}" th:errors="*{code}" class="mt-1 text-sm text-red-600"></p>
-                                    </div>
-                                </div>
-
-                                <!-- Description -->
-                                <div>
-                                    <label for="description" class="block text-sm font-medium custom-text mb-2">
-                                        Description
-                                    </label>
-                                    <textarea th:field="*{description}" id="description" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter category description"></textarea>
-                                    <p th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="mt-1 text-sm text-red-600"></p>
-                                </div>
-
-                                <!-- Active Status -->
-                                <div>
-                                    <label class="flex items-center">
-                                        <input type="checkbox" 
-                                               th:field="*{isActive}" 
-                                               class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                                        <span class="ml-2 text-sm custom-text">Active</span>
-                                    </label>
-                                    <p class="mt-1 text-sm custom-secondary">Inactive categories won't appear in product forms</p>
-                                </div>
-
-                                <!-- Form Actions -->
-                                <div class="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
-                                    <a href="/categories" class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                                        Cancel
-                                    </a>
-                                    <button type="submit" class="px-6 py-2 custom-primary text-white rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <!-- Form Actions -->
+                                    <div class="flex items-center justify-between pt-8 border-t border-gray-200">
+                                        <a href="/categories" class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
+                                            <i class="fas fa-arrow-left mr-2"></i> Back to Categories
+                                        </a>
+                                        <button type="submit" class="inline-flex items-center px-8 py-3 custom-primary text-white rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors text-lg font-medium">
                                         <i class="fas fa-save mr-2"></i>
                                         <span th:text="${isEdit ? 'Update Category' : 'Create Category'}">Save Category</span>
                                     </button>
-                                </div>
+                                    </div>
                             </form>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Category Preview (for editing) -->
-                    <div th:if="${isEdit and category.id}" class="mt-8 bg-white rounded-lg shadow-md overflow-hidden">
-                        <div class="p-6">
-                            <h3 class="text-lg font-semibold custom-text mb-4">
-                                <i class="fas fa-info-circle mr-2"></i> Category Information
-                            </h3>
-
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div>
-                                    <p class="text-sm custom-secondary">Created Date</p>
-                                    <p class="font-medium custom-text" th:text="${#temporals.format(category.createdAt, 'MMM dd, yyyy HH:mm')}">-</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm custom-secondary">Last Modified</p>
-                                    <p class="font-medium custom-text" th:text="${#temporals.format(category.updatedAt, 'MMM dd, yyyy HH:mm')}">-</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm custom-secondary">Status</p>
-                                    <span th:if="${category.isActive}" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <!-- Category Preview (for editing) -->
+                        <div th:if="${isEdit and category.id}" class="mt-8 bg-white rounded-lg shadow-md overflow-hidden">
+                            <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6">
+                                <h3 class="text-xl font-semibold mb-2">
+                                    <i class="fas fa-info-circle mr-2"></i> Category Information
+                                </h3>
+                                <p class="opacity-90">Details about this category's history and usage</p>
+                            </div>
+                            <div class="p-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    <div class="text-center p-4 bg-gray-50 rounded-lg">
+                                        <i class="fas fa-calendar-plus text-2xl text-blue-500 mb-2"></i>
+                                        <p class="text-sm custom-secondary mb-1">Created Date</p>
+                                        <p class="font-semibold custom-text" th:text="${#temporals.format(category.createdAt, 'MMM dd, yyyy')}">-</p>
+                                        <p class="text-xs custom-secondary" th:text="${#temporals.format(category.createdAt, 'HH:mm')}">-</p>
+                                    </div>
+                                    <div class="text-center p-4 bg-gray-50 rounded-lg">
+                                        <i class="fas fa-clock text-2xl text-green-500 mb-2"></i>
+                                        <p class="text-sm custom-secondary mb-1">Last Modified</p>
+                                        <p class="font-semibold custom-text" th:text="${#temporals.format(category.updatedAt, 'MMM dd, yyyy')}">-</p>
+                                        <p class="text-xs custom-secondary" th:text="${#temporals.format(category.updatedAt, 'HH:mm')}">-</p>
+                                    </div>
+                                    <div class="text-center p-4 bg-gray-50 rounded-lg">
+                                        <i class="fas fa-toggle-on text-2xl text-purple-500 mb-2"></i>
+                                        <p class="text-sm custom-secondary mb-1">Status</p>
+                                        <span th:if="${category.isActive}" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
                                         <i class="fas fa-check-circle mr-1"></i>
                                         Active
                                     </span>
-                                    <span th:unless="${category.isActive}" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        <span th:unless="${category.isActive}" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
                                         <i class="fas fa-times-circle mr-1"></i>
                                         Inactive
                                     </span>
+                                    </div>
+                                    <div class="text-center p-4 bg-gray-50 rounded-lg">
+                                        <i class="fas fa-hashtag text-2xl text-orange-500 mb-2"></i>
+                                        <p class="text-sm custom-secondary mb-1">Category ID</p>
+                                        <p class="font-semibold custom-text text-lg" th:text="${category.id}">-</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                        Active
+                        </span>
+                        <span th:unless="${category.isActive}" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        <i class="fas fa-times-circle mr-1"></i>
+                                        Inactive
+                                    </span>
                     </div>
                 </div>
-            </main>
         </div>
+    </div>
+    </div>
+    </main>
+    </div>
     </div>
 
     <!-- Scripts -->
@@ -218,12 +330,56 @@
 
             if (!name) {
                 e.preventDefault();
-                alert('Category name is required.');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Validation Error',
+                    text: 'Category name is required.',
+                    showConfirmButton: true
+                });
                 document.getElementById('name').focus();
                 return false;
             }
         });
+
+        // Show success/error messages using SweetAlert
+        document.addEventListener('DOMContentLoaded', function() {
+            // Debug: Show currentUri value
+            const currentUri = /*[[${currentUri}]]*/ null;
+            console.log('Current URI:', currentUri);
+            console.log('Current path:', window.location.pathname);
+
+            // Success message
+            const successMessage = /*[[${success}]]*/ null;
+            if (successMessage) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: successMessage,
+                    timer: 3000,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            }
+
+            // Error message
+            const errorMessage = /*[[${error}]]*/ null;
+            if (errorMessage) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: errorMessage,
+                    timer: 5000,
+                    showConfirmButton: true,
+                    toast: true,
+                    position: 'top-end'
+                });
+            }
+        });
     </script>
+
+    <!-- Include sidebar JavaScript -->
+    <div th:replace="~{fragments/sidebar :: sidebar-js}"></div>
 </body>
 
 </html>

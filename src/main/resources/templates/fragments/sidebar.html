@@ -45,15 +45,15 @@
                     <i class="fas fa-chevron-right transition-transform duration-300" id="products-arrow"></i>
                 </div>
                 <div class="collapsible-content ml-8" id="products-content">
-                    <a href="/products" class="nav-item p-2 flex items-center space-x-3 text-white no-underline block">
+                    <a href="/products" class="nav-item p-2 flex items-center space-x-3 text-white no-underline block" th:classappend="${currentUri != null and #strings.startsWith(currentUri, '/products') and not #strings.startsWith(currentUri, '/products/add') ? 'active bg-white bg-opacity-20' : ''}">
                         <i class="fas fa-list w-4"></i>
                         <span class="text-sm">View All Products</span>
                     </a>
-                    <a href="/products/add" class="nav-item p-2 flex items-center space-x-3 text-white no-underline block">
+                    <a href="/products/add" class="nav-item p-2 flex items-center space-x-3 text-white no-underline block" th:classappend="${currentUri != null and #strings.startsWith(currentUri, '/products/add') ? 'active bg-white bg-opacity-20' : ''}">
                         <i class="fas fa-plus-circle w-4"></i>
                         <span class="text-sm">Add Product</span>
                     </a>
-                    <a href="/categories" class="nav-item p-2 flex items-center space-x-3 text-white no-underline block">
+                    <a href="/categories" class="nav-item p-2 flex items-center space-x-3 text-white no-underline block" th:classappend="${currentUri != null and #strings.startsWith(currentUri, '/categories') ? 'active bg-white bg-opacity-20' : ''}">
                         <i class="fas fa-tags w-4"></i>
                         <span class="text-sm">Categories</span>
                     </a>
@@ -198,6 +198,41 @@
         }
     }
 
+    // Auto-expand sections based on current page
+    function autoExpandSections() {
+        const currentPath = window.location.pathname;
+
+        // Expand Products section if on products or categories pages
+        if (currentPath.startsWith('/products') || currentPath.startsWith('/categories')) {
+            const productsContent = document.getElementById('products-content');
+            const productsArrow = document.getElementById('products-arrow');
+            if (productsContent && productsArrow) {
+                productsContent.classList.add('expanded');
+                productsArrow.style.transform = 'rotate(90deg)';
+            }
+        }
+
+        // Expand Inventory section if on inventory pages
+        if (currentPath.startsWith('/inventory')) {
+            const inventoryContent = document.getElementById('inventory-content');
+            const inventoryArrow = document.getElementById('inventory-arrow');
+            if (inventoryContent && inventoryArrow) {
+                inventoryContent.classList.add('expanded');
+                inventoryArrow.style.transform = 'rotate(90deg)';
+            }
+        }
+
+        // Expand Suppliers section if on suppliers pages
+        if (currentPath.startsWith('/suppliers')) {
+            const suppliersContent = document.getElementById('suppliers-content');
+            const suppliersArrow = document.getElementById('suppliers-arrow');
+            if (suppliersContent && suppliersArrow) {
+                suppliersContent.classList.add('expanded');
+                suppliersArrow.style.transform = 'rotate(90deg)';
+            }
+        }
+    }
+
     // Mobile sidebar toggle
     function toggleMobileSidebar() {
         const sidebar = document.querySelector('.sidebar');
@@ -214,7 +249,7 @@
         }
     });
 
-    // CSS for collapsible content
+    // CSS for collapsible content and active states
     const style = document.createElement('style');
     style.textContent = `
         .collapsible-content {
@@ -226,8 +261,22 @@
         .collapsible-content.expanded {
             max-height: 500px;
         }
+        
+        .nav-item.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+        }
+        
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+        }
     `;
     document.head.appendChild(style);
+
+    // Initialize auto-expand on page load
+    document.addEventListener('DOMContentLoaded', autoExpandSections);
 </script>
 
 </html>

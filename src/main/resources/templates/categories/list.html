@@ -7,13 +7,15 @@
     <title>Category Management - Smart Inventory Management System</title>
 
     <!-- CSRF Token for AJAX requests -->
-    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}"/>
-    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}"/>
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}" />
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}" />
 
     <!-- Tailwind CSS -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
          :root {
@@ -129,7 +131,13 @@
                         </div>
                     </div>
                     <h3 class="text-lg font-semibold custom-text mb-2" th:text="${category.name}">Category Name</h3>
-                    <p class="custom-secondary text-sm mb-1" th:
+                    <p class="custom-secondary text-sm mb-3" th:text="${category.description}" th:if="${category.description}">Category Description</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm custom-secondary">
+                            <i class="fas fa-box mr-1"></i>
+                            <span th:text="${category.productCount != null ? category.productCount : 0}">0</span> Products
+                        </span>
+                        <span th:if="${category.isActive}" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                             <i class="fas fa-check-circle mr-1"></i>Active
                         </span>
                         <span th:unless="${category.isActive}" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
@@ -138,47 +146,39 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Empty State -->
-            <div th:if="${!categoryPage.hasContent()}" class="text-center py-12">
-                <i class="fas fa-folder-open text-4xl text-gray-400 mb-4"></i>
-                <h3 class="text-lg font-medium custom-text mb-2">No categories found</h3>
-                <p class="custom-secondary">Get started by creating your first category.</p>
-                <a href="/categories/add" class="custom-highlight text-white px-4 py-2 rounded-lg mt-4 inline-block">
-                    <i class="fas fa-plus mr-2"></i>Add Category
-                </a>
-            </div>
-
-            <!-- Pagination -->
-            <div th:if="${categoryPage.totalPages > 1}" class="mt-8 flex justify-center">
-                <nav class="flex items-center space-x-2">
-                    <!-- Previous Page -->
-                    <a th:if="${categoryPage.hasPrevious()}" 
-                       th:href="@{/categories(page=${categoryPage.number - 1}, size=${categoryPage.size})}" 
-                       class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 border border-gray-300 rounded-md">
-                        <i class="fas fa-chevron-left"></i>
-                    </a>
-                    
-                    <!-- Page Numbers -->
-                    <th:block th:each="i : ${#numbers.sequence(0, categoryPage.totalPages - 1)}">
-                        <a th:if="${i != categoryPage.number}" 
-                           th:href="@{/categories(page=${i}, size=${categoryPage.size})}" 
-                           th:text="${i + 1}"
-                           class="px-3 py-2 text-sm text-gray-700 hover:text-blue-600 border border-gray-300 rounded-md">1</a>
-                        <span th:if="${i == categoryPage.number}" 
-                              th:text="${i + 1}"
-                              class="px-3 py-2 text-sm text-white bg-blue-600 border border-blue-600 rounded-md">1</span>
-                    </th:block>
-                    
-                    <!-- Next Page -->
-                    <a th:if="${categoryPage.hasNext()}" 
-                       th:href="@{/categories(page=${categoryPage.number + 1}, size=${categoryPage.size})}" 
-                       class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 border border-gray-300 rounded-md">
-                        <i class="fas fa-chevron-right"></i>
-                    </a>
-                </nav>
-            </div>
         </div>
+
+        <!-- Empty State -->
+        <div th:if="${!categoryPage.hasContent()}" class="text-center py-12">
+            <i class="fas fa-folder-open text-4xl text-gray-400 mb-4"></i>
+            <h3 class="text-lg font-medium custom-text mb-2">No categories found</h3>
+            <p class="custom-secondary">Get started by creating your first category.</p>
+            <a href="/categories/add" class="custom-highlight text-white px-4 py-2 rounded-lg mt-4 inline-block">
+                <i class="fas fa-plus mr-2"></i>Add Category
+            </a>
+        </div>
+
+        <!-- Pagination -->
+        <div th:if="${categoryPage.totalPages > 1}" class="mt-8 flex justify-center">
+            <nav class="flex items-center space-x-2">
+                <!-- Previous Page -->
+                <a th:if="${categoryPage.hasPrevious()}" th:href="@{/categories(page=${categoryPage.number - 1}, size=${categoryPage.size})}" class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 border border-gray-300 rounded-md">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+
+                <!-- Page Numbers -->
+                <th:block th:each="i : ${#numbers.sequence(0, categoryPage.totalPages - 1)}">
+                    <a th:if="${i != categoryPage.number}" th:href="@{/categories(page=${i}, size=${categoryPage.size})}" th:text="${i + 1}" class="px-3 py-2 text-sm text-gray-700 hover:text-blue-600 border border-gray-300 rounded-md">1</a>
+                    <span th:if="${i == categoryPage.number}" th:text="${i + 1}" class="px-3 py-2 text-sm text-white bg-blue-600 border border-blue-600 rounded-md">1</span>
+                </th:block>
+
+                <!-- Next Page -->
+                <a th:if="${categoryPage.hasNext()}" th:href="@{/categories(page=${categoryPage.number + 1}, size=${categoryPage.size})}" class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 border border-gray-300 rounded-md">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </nav>
+        </div>
+    </div>
     </div>
 
     <!-- Add/Edit Category Modal -->
@@ -259,28 +259,38 @@
         }
 
         function deleteCategory(id) {
-            if (confirm('Are you sure you want to delete this category? This action cannot be undone.')) {
-                // Create a form to submit the delete request
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '/categories/delete/' + id;
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Create a form to submit the delete request
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '/categories/delete/' + id;
 
-                // Add CSRF token if needed (Spring Security)
-                const csrfToken = document.querySelector('meta[name="_csrf"]');
-                const csrfHeader = document.querySelector('meta[name="_csrf_header"]');
-                
-                if (csrfToken && csrfHeader) {
-                    const tokenField = document.createElement('input');
-                    tokenField.type = 'hidden';
-                    tokenField.name = '_csrf';
-                    tokenField.value = csrfToken.getAttribute('content');
-                    form.appendChild(tokenField);
+                    // Add CSRF token if needed (Spring Security)
+                    const csrfToken = document.querySelector('meta[name="_csrf"]');
+                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]');
+
+                    if (csrfToken && csrfHeader) {
+                        const tokenField = document.createElement('input');
+                        tokenField.type = 'hidden';
+                        tokenField.name = '_csrf';
+                        tokenField.value = csrfToken.getAttribute('content');
+                        form.appendChild(tokenField);
+                    }
+
+                    // Submit the form
+                    document.body.appendChild(form);
+                    form.submit();
                 }
-
-                // Submit the form
-                document.body.appendChild(form);
-                form.submit();
-            }
+            });
         }
 
         // Form submission
@@ -344,6 +354,37 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeCategoryModal();
+            }
+        });
+
+        // Show success/error messages using SweetAlert
+        document.addEventListener('DOMContentLoaded', function() {
+            // Success message
+            const successMessage = /*[[${success}]]*/ null;
+            if (successMessage) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: successMessage,
+                    timer: 3000,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            }
+
+            // Error message
+            const errorMessage = /*[[${error}]]*/ null;
+            if (errorMessage) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: errorMessage,
+                    timer: 5000,
+                    showConfirmButton: true,
+                    toast: true,
+                    position: 'top-end'
+                });
             }
         });
     </script>

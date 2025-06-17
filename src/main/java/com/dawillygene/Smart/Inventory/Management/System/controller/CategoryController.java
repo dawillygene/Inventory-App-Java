@@ -15,7 +15,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Optional;
 
 @Controller
 @RequestMapping("/categories")
@@ -63,6 +62,7 @@ public class CategoryController {
         model.addAttribute("sortBy", sortBy);
         model.addAttribute("sortDir", sortDir);
         model.addAttribute("search", search);
+        model.addAttribute("currentUri", "/categories");
         
         return "categories/list";
     }
@@ -74,6 +74,7 @@ public class CategoryController {
     public String showAddCategoryForm(Model model) {
         model.addAttribute("category", new Category());
         model.addAttribute("isEdit", false);
+        model.addAttribute("currentUri", "/categories/add");
         return "categories/form";
     }
 
@@ -86,6 +87,7 @@ public class CategoryController {
             Category category = categoryService.findCategoryById(id);
             model.addAttribute("category", category);
             model.addAttribute("isEdit", true);
+            model.addAttribute("currentUri", "/categories/edit/" + id);
             return "categories/form";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Category not found.");
@@ -142,6 +144,7 @@ public class CategoryController {
         try {
             Category category = categoryService.findCategoryById(id);
             model.addAttribute("category", category);
+            model.addAttribute("currentUri", "/categories/view/" + id);
             
             // Get product count for this category
             try {
@@ -219,6 +222,8 @@ public class CategoryController {
 
     /**
      * Get category details (AJAX endpoint)
+     */
+    @GetMapping("/api/{id}")
     @ResponseBody
     public Category getCategoryById(@PathVariable Long id) {
         try {
