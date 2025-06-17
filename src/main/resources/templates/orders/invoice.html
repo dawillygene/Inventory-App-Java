@@ -6,6 +6,7 @@
     <title th:text="'Invoice - Order ' + ${order.orderNumber} + ' - Smart Inventory'"></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/shared-styles.css">
     <style>
         @media print {
             .no-print { display: none !important; }
@@ -22,7 +23,23 @@
         <!-- Main Content -->
         <div class="flex-1 ml-64 print:ml-0">
             <!-- Header -->
-            <div th:replace="~{fragments/header :: header}" class="no-print"></div>
+            <header class="bg-white shadow-sm border-b border-gray-200 p-4 no-print">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-semibold custom-text">Smart Inventory Management</h2>
+                        <p class="custom-secondary">Manage your inventory efficiently</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button class="lg:hidden text-gray-600 hover:text-gray-900" onclick="toggleMobileSidebar()">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                        <div class="hidden sm:flex items-center space-x-2 text-sm custom-secondary">
+                            <i class="fas fa-clock"></i>
+                            <span id="current-time"></span>
+                        </div>
+                    </div>
+                </div>
+            </header>
             
             <!-- Page Content -->
             <main class="p-6 print:p-0">
@@ -241,6 +258,29 @@
             alert('PDF download functionality would be implemented here. For now, please use the print function.');
             window.print();
         }
+
+        function toggleMobileSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('sidebar-open');
+        }
+
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const timeElement = document.getElementById('current-time');
+            if (timeElement) {
+                timeElement.textContent = timeString;
+            }
+        }
+
+        // Update time every minute
+        updateTime();
+        setInterval(updateTime, 60000);
     </script>
 </body>
 </html>

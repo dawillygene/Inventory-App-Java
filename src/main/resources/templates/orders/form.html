@@ -6,6 +6,7 @@
     <title th:text="${isEdit ? 'Edit Order' : (orderType == 'PURCHASE' ? 'New Purchase Order' : 'New Sales Order')} + ' - Smart Inventory'"></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/shared-styles.css">
 </head>
 <body class="bg-gray-50">
     <div class="flex">
@@ -15,7 +16,23 @@
         <!-- Main Content -->
         <div class="flex-1 ml-64">
             <!-- Header -->
-            <div th:replace="~{fragments/header :: header}"></div>
+            <header class="bg-white shadow-sm border-b border-gray-200 p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-semibold custom-text">Smart Inventory Management</h2>
+                        <p class="custom-secondary">Manage your inventory efficiently</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button class="lg:hidden text-gray-600 hover:text-gray-900" onclick="toggleMobileSidebar()">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                        <div class="hidden sm:flex items-center space-x-2 text-sm custom-secondary">
+                            <i class="fas fa-clock"></i>
+                            <span id="current-time"></span>
+                        </div>
+                    </div>
+                </div>
+            </header>
             
             <!-- Page Content -->
             <main class="p-6">
@@ -80,7 +97,7 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-2">
                                     <span th:text="${orderType == 'PURCHASE' ? 'Expected Delivery Date' : 'Expected Ship Date'}"></span>
                                 </label>
-                                <input type="date" th:field="*{expectedDate}" 
+                                <input type="date" th:field="*{expectedDeliveryDate}" 
                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
 
@@ -95,7 +112,7 @@
                                     <option value="">Select Supplier</option>
                                     <option th:each="supplier : ${suppliers}" 
                                             th:value="${supplier.id}" 
-                                            th:text="${supplier.name + ' (' + supplier.contactEmail + ')'}"
+                                            th:text="${supplier.name + ' (' + supplier.email + ')'}"
                                             th:selected="${order.supplier != null && order.supplier.id == supplier.id}"></option>
                                 </select>
                                 <div th:if="${#fields.hasErrors('supplier')}" class="text-red-500 text-sm mt-1" th:errors="*{supplier}"></div>
@@ -131,16 +148,6 @@
                                 <input type="tel" th:field="*{customerPhone}" 
                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                        placeholder="+1 (555) 123-4567">
-                            </div>
-
-                            <!-- Reference -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    Reference Number
-                                </label>
-                                <input type="text" th:field="*{reference}" 
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                       placeholder="Optional reference number">
                             </div>
                         </div>
 
@@ -260,7 +267,7 @@
                             <option value="">Select Product</option>
                             <option th:each="product : ${products}" 
                                     th:value="${product.id}" 
-                                    th:text="${product.name + ' (Stock: ' + product.quantity + ')'}"
+                                    th:text="${product.name}"
                                     th:data-price="${product.price}"></option>
                         </select>
                     </div>
@@ -425,6 +432,32 @@
                 modal.classList.add('hidden');
             }
         });
+    </script>
+
+    <!-- Mobile Sidebar Script -->
+    <script>
+        function toggleMobileSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('sidebar-open');
+        }
+
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const timeElement = document.getElementById('current-time');
+            if (timeElement) {
+                timeElement.textContent = timeString;
+            }
+        }
+
+        // Update time every minute
+        updateTime();
+        setInterval(updateTime, 60000);
     </script>
 </body>
 </html>

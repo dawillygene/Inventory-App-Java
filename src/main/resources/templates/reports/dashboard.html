@@ -9,28 +9,54 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --primary-color: #3b82f6;
-            --primary-dark: #1d4ed8;
-            --secondary-color: #64748b;
-            --accent-color: #10b981;
-            --warning-color: #f59e0b;
-            --danger-color: #ef4444;
-            --light-bg: #f8fafc;
-            --highlight-color: #dbeafe;
+            --bg-color: #F1F1F1;
+            --text-color: #202020;
+            --secondary-color: #7E909A;
+            --primary-color: #1C4E80;
+            --accent1-color: #A5D8DD;
+            --accent2-color: #EA6A47;
+            --highlight-color: #0091D5;
         }
         
-        .custom-text { color: #1e293b; }
-        .custom-secondary { color: var(--secondary-color); }
-        .custom-primary { color: var(--primary-color); }
-        .bg-custom-primary { background-color: var(--primary-color); }
+        .custom-bg {
+            background-color: var(--bg-color);
+        }
+        
+        .custom-text {
+            color: var(--text-color);
+        }
+        
+        .custom-secondary {
+            color: var(--secondary-color);
+        }
+        
+        .custom-primary {
+            background-color: var(--primary-color);
+        }
+        
+        .custom-accent1 {
+            background-color: var(--accent1-color);
+        }
+        
+        .custom-accent2 {
+            background-color: var(--accent2-color);
+        }
+        
+        .custom-highlight {
+            background-color: var(--highlight-color);
+        }
+        
+        .bg-custom-primary { 
+            background-color: var(--primary-color); 
+        }
         
         .sidebar {
-            background: linear-gradient(180deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100vh;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0d3a5f 100%);
+            min-height: 100vh;
             width: 280px;
+            position: fixed;
+            left: 0;
+            top: 0;
             z-index: 1000;
             overflow-y: auto;
         }
@@ -74,7 +100,7 @@
         }
     </style>
 </head>
-<body class="bg-gray-50">
+<body class="custom-bg custom-text">
     <!-- Include Sidebar -->
     <div th:replace="~{fragments/sidebar :: sidebar}"></div>
 

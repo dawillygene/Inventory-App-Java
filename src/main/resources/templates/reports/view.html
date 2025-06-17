@@ -6,65 +6,7 @@
     <title>Report View - Smart Inventory Management System</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #3b82f6;
-            --primary-dark: #1d4ed8;
-            --secondary-color: #64748b;
-            --accent-color: #10b981;
-            --warning-color: #f59e0b;
-            --danger-color: #ef4444;
-            --light-bg: #f8fafc;
-            --highlight-color: #dbeafe;
-        }
-        
-        .custom-text { color: #1e293b; }
-        .custom-secondary { color: var(--secondary-color); }
-        .custom-primary { color: var(--primary-color); }
-        .bg-custom-primary { background-color: var(--primary-color); }
-        
-        .sidebar {
-            background: linear-gradient(180deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100vh;
-            width: 280px;
-            z-index: 1000;
-            overflow-y: auto;
-        }
-        
-        .main-content {
-            margin-left: 280px;
-            min-height: 100vh;
-        }
-        
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-                transition: transform 0.3s ease;
-            }
-            .sidebar.mobile-open {
-                transform: translateX(0);
-            }
-            .main-content {
-                margin-left: 0;
-            }
-        }
-        
-        @media print {
-            .sidebar, .no-print {
-                display: none !important;
-            }
-            .main-content {
-                margin-left: 0 !important;
-            }
-            .print-friendly {
-                box-shadow: none !important;
-                border: 1px solid #e5e7eb !important;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="/css/shared-styles.css">
 </head>
 <body class="bg-gray-50">
     <!-- Include Sidebar -->
@@ -88,10 +30,10 @@
                         <i class="fas fa-print mr-2"></i>Print
                     </button>
                     <a th:href="'/reports/export/' + ${reportType} + '?startDate=' + ${startDate} + '&endDate=' + ${endDate}" 
-                       class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors">
+                       class="btn-secondary px-4 py-2">
                         <i class="fas fa-download mr-2"></i>Export CSV
                     </a>
-                    <a href="/reports/generate" class="bg-custom-primary hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    <a href="/reports/generate" class="btn-primary px-4 py-2">
                         <i class="fas fa-plus mr-2"></i>New Report
                     </a>
                     <button onclick="toggleMobileSidebar()" class="md:hidden bg-gray-200 p-2 rounded-lg">
@@ -315,7 +257,7 @@
                 </div>
                 <h3 class="text-lg font-medium text-gray-900 mb-2">No Data Available</h3>
                 <p class="text-gray-500 mb-6">No data found for the selected criteria and date range.</p>
-                <a href="/reports/generate" class="bg-custom-primary hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors">
+                <a href="/reports/generate" class="btn-primary px-6 py-3">
                     <i class="fas fa-plus mr-2"></i>Generate New Report
                 </a>
             </div>

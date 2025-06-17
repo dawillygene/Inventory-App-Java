@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -80,6 +81,7 @@ public class InventoryService {
         stockMovement.setQuantity(Math.abs(quantityChange));
         stockMovement.setPreviousQuantity(inventory.getQuantity() - quantityChange);
         stockMovement.setNewQuantity(newQuantity);
+        stockMovement.setReferenceNumber(generateReferenceNumber());
         stockMovement.setNotes(notes);
         stockMovement.setCreatedAt(LocalDateTime.now());
         
@@ -142,6 +144,7 @@ public class InventoryService {
             stockMovement.setQuantity(initialQuantity);
             stockMovement.setPreviousQuantity(0);
             stockMovement.setNewQuantity(initialQuantity);
+            stockMovement.setReferenceNumber(generateReferenceNumber());
             stockMovement.setNotes("Initial inventory setup");
             stockMovement.setCreatedAt(LocalDateTime.now());
             stockMovementRepository.save(stockMovement);
@@ -282,6 +285,7 @@ public class InventoryService {
         stockMovement.setQuantity(Math.abs(difference));
         stockMovement.setPreviousQuantity(currentQuantity);
         stockMovement.setNewQuantity(newQuantity);
+        stockMovement.setReferenceNumber(generateReferenceNumber());
         stockMovement.setReason(reason);
         stockMovement.setCreatedAt(LocalDateTime.now());
         
@@ -320,5 +324,16 @@ public class InventoryService {
     public Integer getProductStockLevel(Long productId) {
         Optional<Inventory> inventory = inventoryRepository.findByProductId(productId);
         return inventory.map(Inventory::getQuantity).orElse(0);
+    }
+    
+    /**
+     * Generate a unique reference number for stock movements
+     */
+    private String generateReferenceNumber() {
+        LocalDateTime now = LocalDateTime.now();
+        String timestamp = now.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        // Add a random suffix to ensure uniqueness in case of concurrent operations
+        long randomSuffix = (long) (Math.random() * 1000);
+        return "SM" + timestamp + String.format("%03d", randomSuffix);
     }
 }

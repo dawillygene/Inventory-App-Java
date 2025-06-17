@@ -208,15 +208,15 @@
                     </div>
 
                     <!-- Physical Properties -->
-                    <div class="bg-white p-6 rounded-lg card-shadow" th:if="${product.weightKg != null or product.dimensions != null}">
+                    <div class="bg-white p-6 rounded-lg card-shadow" th:if="${product.weight != null or product.dimensions != null}">
                         <h3 class="text-lg font-semibold custom-text mb-4 flex items-center">
                             <i class="fas fa-ruler-combined mr-2 text-purple-500"></i> Physical Properties
                         </h3>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div th:if="${product.weightKg != null}">
+                            <div th:if="${product.weight != null}">
                                 <label class="block text-sm font-medium custom-secondary">Weight</label>
-                                <p class="text-lg custom-text" th:text="${product.weightKg} + ' kg'">0.00 kg</p>
+                                <p class="text-lg custom-text" th:text="${product.weight} + ' kg'">0.00 kg</p>
                             </div>
 
                             <div th:if="${product.dimensions != null}">
