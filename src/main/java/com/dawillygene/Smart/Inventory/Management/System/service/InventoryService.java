@@ -289,4 +289,36 @@ public class InventoryService {
         stockMovementRepository.save(stockMovement);
         return inventoryRepository.save(inventory);
     }
+    
+    /**
+     * Get low stock products for reports
+     */
+    public List<Product> getLowStockProducts() {
+        return inventoryRepository.findLowStockItems().stream()
+                .map(Inventory::getProduct)
+                .toList();
+    }
+    
+    /**
+     * Get current stock value for all inventory
+     */
+    public BigDecimal getCurrentStockValue() {
+        Double value = inventoryRepository.getTotalInventoryValue();
+        return value != null ? BigDecimal.valueOf(value) : BigDecimal.ZERO;
+    }
+    
+    /**
+     * Get total stock value (alias for getCurrentStockValue)
+     */
+    public BigDecimal getTotalStockValue() {
+        return getCurrentStockValue();
+    }
+    
+    /**
+     * Get product stock level by product ID
+     */
+    public Integer getProductStockLevel(Long productId) {
+        Optional<Inventory> inventory = inventoryRepository.findByProductId(productId);
+        return inventory.map(Inventory::getQuantity).orElse(0);
+    }
 }

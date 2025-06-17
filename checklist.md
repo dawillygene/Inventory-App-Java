@@ -165,17 +165,17 @@
 - [x] Supplier transaction history
 
 ### 6.7 Order Templates
-- [ ] Order list template
-- [ ] Order creation form
-- [ ] Order detail view
-- [ ] Invoice template
-- [ ] Order status tracking
+- [x] Order list template
+- [x] Order creation form
+- [x] Order detail view
+- [x] Invoice template
+- [x] Order status tracking
 
 ### 6.8 Reports Templates
-- [ ] Report dashboard
-- [ ] Report generation form
-- [ ] Report display template
-- [ ] Export functionality
+- [x] Report dashboard
+- [x] Report generation form
+- [x] Report display template
+- [x] Export functionality
 
 ### 6.9 Admin Templates
 - [ ] User management template

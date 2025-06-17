@@ -178,7 +178,7 @@ public class OrderController {
 
         try {
             // Get current user
-            User currentUser = userService.findByUsername(authentication.getName())
+            User currentUser = userService.getUserByUsername(authentication.getName())
                     .orElseThrow(() -> new RuntimeException("Current user not found"));
             order.setUser(currentUser);
             

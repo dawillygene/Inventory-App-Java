@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports Dashboard - Smart Inventory Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --primary-dark: #1d4ed8;
+            --secondary-color: #64748b;
+            --accent-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-bg: #f8fafc;
+            --highlight-color: #dbeafe;
+        }
+        
+        .custom-text { color: #1e293b; }
+        .custom-secondary { color: var(--secondary-color); }
+        .custom-primary { color: var(--primary-color); }
+        .bg-custom-primary { background-color: var(--primary-color); }
+        
+        .sidebar {
+            background: linear-gradient(180deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 280px;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+        
+        .nav-item {
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            margin: 4px 0;
+        }
+        
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .nav-item.active {
+            background-color: var(--highlight-color);
+            color: white;
+        }
+        
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Include Sidebar -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="bg-white shadow-sm border-b border-gray-200 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-semibold custom-text">Reports Dashboard</h1>
+                    <p class="text-sm custom-secondary mt-1">Analytics and insights for your inventory</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/reports/generate" class="bg-custom-primary hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Generate Report
+                    </a>
+                    <button onclick="toggleMobileSidebar()" class="md:hidden bg-gray-200 p-2 rounded-lg">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="p-6">
+            <!-- Error Message -->
+            <div th:if="${error}" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-circle text-red-500 mr-3"></i>
+                    <p class="text-red-700" th:text="${error}">Error message</p>
+                </div>
+            </div>
+
+            <!-- Key Metrics Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Total Products -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-blue-100 rounded-full mr-4">
+                            <i class="fas fa-box text-2xl text-blue-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-custom-secondary">Total Products</p>
+                            <p class="text-2xl font-bold custom-text" th:text="${totalProducts}">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Suppliers -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-green-100 rounded-full mr-4">
+                            <i class="fas fa-truck text-2xl text-green-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-custom-secondary">Total Suppliers</p>
+                            <p class="text-2xl font-bold custom-text" th:text="${totalSuppliers}">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Orders -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-purple-100 rounded-full mr-4">
+                            <i class="fas fa-shopping-cart text-2xl text-purple-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-custom-secondary">Total Orders</p>
+                            <p class="text-2xl font-bold custom-text" th:text="${totalOrders}">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Inventory Value -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-yellow-100 rounded-full mr-4">
+                            <i class="fas fa-dollar-sign text-2xl text-yellow-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-custom-secondary">Total Value</p>
+                            <p class="text-2xl font-bold custom-text" th:text="'$' + ${#numbers.formatDecimal(totalInventoryValue, 1, 2)}">$0.00</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alert Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- Low Stock Alert -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold custom-text">Low Stock Alert</h3>
+                        <i class="fas fa-exclamation-triangle text-red-500"></i>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-3xl font-bold text-red-600" th:text="${lowStockCount}">0</p>
+                            <p class="text-sm text-custom-secondary">Products below minimum level</p>
+                        </div>
+                        <a href="/inventory/low-stock" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors text-sm">
+                            View Details
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold custom-text">Recent Activity</h3>
+                        <i class="fas fa-clock text-blue-500"></i>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-3xl font-bold text-blue-600" th:text="${recentOrdersCount}">0</p>
+                            <p class="text-sm text-custom-secondary">Orders in last 30 days</p>
+                        </div>
+                        <a href="/orders" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors text-sm">
+                            View Orders
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <!-- Inventory Levels Chart -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold custom-text mb-4">Inventory Levels</h3>
+                    <div class="h-64">
+                        <canvas id="inventoryChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Orders Trend Chart -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold custom-text mb-4">Orders Trend</h3>
+                    <div class="h-64">
+                        <canvas id="ordersChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold custom-text mb-4">Quick Reports</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                    <a href="/reports/export/inventory" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                        <div class="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-boxes text-blue-600"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium custom-text">Inventory Report</div>
+                            <div class="text-xs text-custom-secondary">Export CSV</div>
+                        </div>
+                    </a>
+
+                    <a href="/reports/export/sales" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                        <div class="flex-shrink-0 h-10 w-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-chart-line text-green-600"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium custom-text">Sales Report</div>
+                            <div class="text-xs text-custom-secondary">Export CSV</div>
+                        </div>
+                    </a>
+
+                    <a href="/reports/export/purchases" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                        <div class="flex-shrink-0 h-10 w-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-shopping-cart text-purple-600"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium custom-text">Purchase Report</div>
+                            <div class="text-xs text-custom-secondary">Export CSV</div>
+                        </div>
+                    </a>
+
+                    <a href="/reports/export/low-stock" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                        <div class="flex-shrink-0 h-10 w-10 bg-red-100 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-exclamation-triangle text-red-600"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium custom-text">Low Stock Report</div>
+                            <div class="text-xs text-custom-secondary">Export CSV</div>
+                        </div>
+                    </a>
+
+                    <a href="/reports/export/supplier" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                        <div class="flex-shrink-0 h-10 w-10 bg-yellow-100 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-truck text-yellow-600"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium custom-text">Supplier Report</div>
+                            <div class="text-xs text-custom-secondary">Export CSV</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        function toggleMobileSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('mobile-open');
+        }
+
+        // Load charts when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadInventoryChart();
+            loadOrdersChart();
+        });
+
+        async function loadInventoryChart() {
+            try {
+                const response = await fetch('/reports/api/analytics/inventory-levels');
+                const data = await response.json();
+                
+                const ctx = document.getElementById('inventoryChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels || [],
+                        datasets: [{
+                            label: 'Stock Quantity',
+                            data: data.data || [],
+                            backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading inventory chart:', error);
+            }
+        }
+
+        async function loadOrdersChart() {
+            try {
+                const response = await fetch('/reports/api/analytics/orders-trend');
+                const data = await response.json();
+                
+                const ctx = document.getElementById('ordersChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels || [],
+                        datasets: [{
+                            label: 'Orders Count',
+                            data: data.data || [],
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading orders chart:', error);
+            }
+        }
+    </script>
+</body>
+</html>

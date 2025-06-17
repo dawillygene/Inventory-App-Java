@@ -93,4 +93,40 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("SELECT SUM(o.grandTotal) FROM Order o WHERE o.orderType = 'PURCHASE' AND o.orderStatus = 'COMPLETED' " +
            "AND o.orderDate BETWEEN :startDate AND :endDate")
     Double getTotalPurchasesForPeriod(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+    
+    /**
+     * Count orders after a specific date
+     */
+    @Query("SELECT COUNT(o) FROM Order o WHERE o.orderDate > :since")
+    Long countByOrderDateAfter(@Param("since") LocalDateTime since);
+    
+    /**
+     * Find orders by type and date range
+     */
+    @Query("SELECT o FROM Order o WHERE o.orderType = :orderType AND o.orderDate BETWEEN :startDate AND :endDate ORDER BY o.orderDate DESC")
+    List<Order> findByOrderTypeAndOrderDateBetween(@Param("orderType") Order.OrderType orderType, 
+                                                   @Param("startDate") LocalDateTime startDate, 
+                                                   @Param("endDate") LocalDateTime endDate);
+    
+    /**
+     * Find orders by type, date range and supplier
+     */
+    @Query("SELECT o FROM Order o WHERE o.orderType = :orderType AND o.orderDate BETWEEN :startDate AND :endDate " +
+           "AND o.supplier.id = :supplierId ORDER BY o.orderDate DESC")
+    List<Order> findByOrderTypeAndOrderDateBetweenAndSupplierId(@Param("orderType") Order.OrderType orderType,
+                                                                @Param("startDate") LocalDateTime startDate,
+                                                                @Param("endDate") LocalDateTime endDate,
+                                                                @Param("supplierId") Long supplierId);
+    
+    /**
+     * Count orders by year and month
+     */
+    @Query("SELECT COUNT(o) FROM Order o WHERE YEAR(o.orderDate) = :year AND MONTH(o.orderDate) = :month")
+    Long countByYearAndMonth(@Param("year") int year, @Param("month") int month);
+    
+    /**
+     * Count orders by supplier
+     */
+    @Query("SELECT COUNT(o) FROM Order o WHERE o.supplier.id = :supplierId")
+    Long countBySupplierId(@Param("supplierId") Long supplierId);
 }

@@ -150,6 +150,25 @@ public class OrderService {
         
         // Handle specific status changes
         switch (newStatus) {
+            case PENDING:
+                // Order is pending - no special action needed
+                break;
+            case CONFIRMED:
+                // Order is confirmed - reserve stock for sales orders
+                if (order.getOrderType() == Order.OrderType.SALE) {
+                    List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);
+                    for (OrderItem item : orderItems) {
+                        inventoryService.reserveStock(item.getProduct().getId(), item.getQuantity(),
+                                "Stock reserved for order: " + order.getOrderNumber());
+                    }
+                }
+                break;
+            case PROCESSING:
+                // Order is being processed - no special action needed
+                break;
+            case SHIPPED:
+                // Order is shipped - no special action needed
+                break;
             case DELIVERED:
                 order.setActualDeliveryDate(LocalDateTime.now());
                 if (order.getOrderType() == Order.OrderType.PURCHASE) {
@@ -168,6 +187,12 @@ public class OrderService {
                     }
                 }
                 break;
+            case COMPLETED:
+                // Order is completed - same as delivered
+                if (order.getActualDeliveryDate() == null) {
+                    order.setActualDeliveryDate(LocalDateTime.now());
+                }
+                break;
             case CANCELLED:
                 if (order.getOrderType() == Order.OrderType.SALE) {
                     // Release reserved stock for cancelled sales orders
@@ -175,6 +200,22 @@ public class OrderService {
                     for (OrderItem item : orderItems) {
                         inventoryService.releaseReservedStock(item.getProduct().getId(), item.getQuantity(),
                                 "Order cancelled: " + order.getOrderNumber());
+                    }
+                }
+                break;
+            case RETURNED:
+                // Handle returned orders - reverse inventory changes
+                if (order.getOrderType() == Order.OrderType.SALE) {
+                    List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);
+                    for (OrderItem item : orderItems) {
+                        inventoryService.addStock(item.getProduct().getId(), item.getQuantity(),
+                                "Sales order returned: " + order.getOrderNumber());
+                    }
+                } else if (order.getOrderType() == Order.OrderType.PURCHASE) {
+                    List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);
+                    for (OrderItem item : orderItems) {
+                        inventoryService.removeStock(item.getProduct().getId(), item.getQuantity(),
+                                "Purchase order returned: " + order.getOrderNumber());
                     }
                 }
                 break;
@@ -322,5 +363,58 @@ public class OrderService {
         public Long getCancelledOrders() { return cancelledOrders; }
         public BigDecimal getTotalSalesAmount() { return totalSalesAmount; }
         public BigDecimal getTotalPurchaseAmount() { return totalPurchaseAmount; }
+    }
+
+    /**
+     * Get total order count
+     */
+    public long getTotalOrderCount() {
+        return orderRepository.count();
+    }
+    
+    /**
+     * Get orders count since a specific date
+     */
+    public long getOrdersCountSince(LocalDateTime since) {
+        return orderRepository.countByOrderDateAfter(since);
+    }
+    
+    /**
+     * Find sales orders by date range
+     */
+    public List<Order> findSalesOrdersByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
+        return orderRepository.findByOrderTypeAndOrderDateBetween(Order.OrderType.SALE, startDate, endDate);
+    }
+    
+    /**
+     * Find purchase orders by date range
+     */
+    public List<Order> findPurchaseOrdersByDateRange(LocalDateTime startDate, LocalDateTime endDate, Long supplierId) {
+        if (supplierId != null) {
+            return orderRepository.findByOrderTypeAndOrderDateBetweenAndSupplierId(Order.OrderType.PURCHASE, startDate, endDate, supplierId);
+        } else {
+            return orderRepository.findByOrderTypeAndOrderDateBetween(Order.OrderType.PURCHASE, startDate, endDate);
+        }
+    }
+    
+    /**
+     * Find orders by supplier
+     */
+    public List<Order> findOrdersBySupplier(Long supplierId) {
+        return orderRepository.findBySupplierId(supplierId);
+    }
+    
+    /**
+     * Get orders count for a specific month
+     */
+    public long getOrdersCountForMonth(int year, int month) {
+        return orderRepository.countByYearAndMonth(year, month);
+    }
+    
+    /**
+     * Get orders count by supplier
+     */
+    public long getOrdersCountBySupplier(Long supplierId) {
+        return orderRepository.countBySupplierId(supplierId);
     }
 }

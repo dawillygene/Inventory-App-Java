@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Invoice - Order ' + ${order.orderNumber} + ' - Smart Inventory'"></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+            .print-break { page-break-before: always; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="flex">
+        <!-- Sidebar -->
+        <div th:replace="~{fragments/sidebar :: sidebar}" class="no-print"></div>
+        
+        <!-- Main Content -->
+        <div class="flex-1 ml-64 print:ml-0">
+            <!-- Header -->
+            <div th:replace="~{fragments/header :: header}" class="no-print"></div>
+            
+            <!-- Page Content -->
+            <main class="p-6 print:p-0">
+                <!-- Page Header -->
+                <div class="mb-6 no-print">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <a th:href="@{/orders/view/{id}(id=${order.id})}" class="text-gray-500 hover:text-gray-700">
+                                <i class="fas fa-arrow-left text-xl"></i>
+                            </a>
+                            <div>
+                                <h1 class="text-3xl font-bold text-gray-900">Invoice</h1>
+                                <p class="text-gray-600 mt-1" th:text="'Invoice for order ' + ${order.orderNumber}"></p>
+                            </div>
+                        </div>
+                        <div class="flex space-x-3">
+                            <button onclick="window.print()" 
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                <i class="fas fa-print mr-2"></i>Print Invoice
+                            </button>
+                            <button onclick="downloadPDF()" 
+                                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                <i class="fas fa-download mr-2"></i>Download PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alert Messages -->
+                <div th:if="${success}" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 no-print">
+                    <span th:text="${success}"></span>
+                </div>
+                <div th:if="${error}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 no-print">
+                    <span th:text="${error}"></span>
+                </div>
+
+                <!-- Invoice Content -->
+                <div class="bg-white rounded-lg shadow-sm border print:shadow-none print:border-0">
+                    <div class="p-8">
+                        <!-- Invoice Header -->
+                        <div class="flex justify-between items-start mb-8">
+                            <div>
+                                <h1 class="text-4xl font-bold text-gray-900 mb-2">INVOICE</h1>
+                                <div class="text-lg text-gray-600">
+                                    <div class="mb-1">Invoice #: <span class="font-medium text-gray-900" th:text="${order.orderNumber}"></span></div>
+                                    <div class="mb-1">Date: <span class="font-medium text-gray-900" th:text="${#temporals.format(order.orderDate, 'MMM dd, yyyy')}"></span></div>
+                                    <div th:if="${order.expectedDate}">Due Date: <span class="font-medium text-gray-900" th:text="${#temporals.format(order.expectedDate, 'MMM dd, yyyy')}"></span></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Company Logo/Info -->
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-blue-600 mb-2">Smart Inventory</div>
+                                <div class="text-gray-600">
+                                    <div>123 Business Street</div>
+                                    <div>Business City, BC 12345</div>
+                                    <div>Phone: (555) 123-4567</div>
+                                    <div>Email: info@smartinventory.com</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bill To / Ship To Section -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                            <!-- Bill To -->
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-3" 
+                                    th:text="${order.orderType.name() == 'PURCHASE' ? 'Bill From:' : 'Bill To:'}"></h3>
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <!-- Supplier Info (Purchase Orders) -->
+                                    <div th:if="${order.orderType.name() == 'PURCHASE' && order.supplier}">
+                                        <div class="font-semibold text-gray-900" th:text="${order.supplier.name}"></div>
+                                        <div class="text-gray-600 mt-1" th:if="${order.supplier.address}" th:text="${order.supplier.address}"></div>
+                                        <div class="text-gray-600" th:if="${order.supplier.contactEmail}" th:text="${order.supplier.contactEmail}"></div>
+                                        <div class="text-gray-600" th:if="${order.supplier.contactPhone}" th:text="${order.supplier.contactPhone}"></div>
+                                    </div>
+                                    
+                                    <!-- Customer Info (Sales Orders) -->
+                                    <div th:if="${order.orderType.name() == 'SALE'}">
+                                        <div class="font-semibold text-gray-900" th:text="${order.customerName ?: 'Customer Name Not Provided'}"></div>
+                                        <div class="text-gray-600 mt-1" th:if="${order.customerEmail}" th:text="${order.customerEmail}"></div>
+                                        <div class="text-gray-600" th:if="${order.customerPhone}" th:text="${order.customerPhone}"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Invoice Details -->
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-3">Invoice Details:</h3>
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <div class="grid grid-cols-2 gap-2 text-sm">
+                                        <div class="text-gray-600">Order Type:</div>
+                                        <div class="font-medium" th:text="${order.orderType.description}"></div>
+                                        
+                                        <div class="text-gray-600">Order Status:</div>
+                                        <div class="font-medium" th:text="${order.orderStatus.description}"></div>
+                                        
+                                        <div class="text-gray-600">Payment Status:</div>
+                                        <div class="font-medium" th:text="${order.paymentStatus.description}"></div>
+                                        
+                                        <div th:if="${order.reference}" class="text-gray-600">Reference:</div>
+                                        <div th:if="${order.reference}" class="font-medium" th:text="${order.reference}"></div>
+                                        
+                                        <div class="text-gray-600">Created By:</div>
+                                        <div class="font-medium" th:text="${order.user.username}"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Invoice Items Table -->
+                        <div class="mb-8">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-3">Items:</h3>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full">
+                                    <thead class="bg-gray-100">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900 border-b">Item</th>
+                                            <th class="px-4 py-3 text-center text-sm font-semibold text-gray-900 border-b">Qty</th>
+                                            <th class="px-4 py-3 text-right text-sm font-semibold text-gray-900 border-b">Unit Price</th>
+                                            <th class="px-4 py-3 text-right text-sm font-semibold text-gray-900 border-b">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:if="${orderItems.isEmpty()}">
+                                            <td colspan="4" class="px-4 py-8 text-center text-gray-500">
+                                                No items in this order
+                                            </td>
+                                        </tr>
+                                        <tr th:each="item : ${orderItems}" class="border-b border-gray-200">
+                                            <td class="px-4 py-3">
+                                                <div class="font-medium text-gray-900" th:text="${item.product.name}"></div>
+                                                <div class="text-sm text-gray-500" th:text="'SKU: ' + ${item.product.sku}"></div>
+                                                <div th:if="${item.product.description}" class="text-sm text-gray-500" th:text="${item.product.description}"></div>
+                                            </td>
+                                            <td class="px-4 py-3 text-center text-gray-900" th:text="${item.quantity}"></td>
+                                            <td class="px-4 py-3 text-right text-gray-900" th:text="${'$' + #numbers.formatDecimal(item.unitPrice, 1, 2)}"></td>
+                                            <td class="px-4 py-3 text-right font-medium text-gray-900" th:text="${'$' + #numbers.formatDecimal(item.totalPrice, 1, 2)}"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Invoice Totals -->
+                        <div class="flex justify-end mb-8">
+                            <div class="w-80">
+                                <table class="w-full">
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-2 text-gray-600">Subtotal:</td>
+                                        <td class="py-2 text-right font-medium" th:text="${'$' + #numbers.formatDecimal(order.totalAmount, 1, 2)}"></td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-2 text-gray-600">Tax (0%):</td>
+                                        <td class="py-2 text-right font-medium">$0.00</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-2 text-gray-600">Shipping:</td>
+                                        <td class="py-2 text-right font-medium">$0.00</td>
+                                    </tr>
+                                    <tr class="border-b-2 border-gray-300">
+                                        <td class="py-3 text-lg font-semibold text-gray-900">Total:</td>
+                                        <td class="py-3 text-right text-lg font-bold text-blue-600" th:text="${'$' + #numbers.formatDecimal(order.totalAmount, 1, 2)}"></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Notes Section -->
+                        <div th:if="${order.notes}" class="mb-8">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-3">Notes:</h3>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-gray-700" th:text="${order.notes}"></p>
+                            </div>
+                        </div>
+
+                        <!-- Payment Terms -->
+                        <div class="border-t border-gray-200 pt-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-3">Payment Terms & Information:</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-600">
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 mb-2">Payment Terms:</h4>
+                                    <ul class="space-y-1">
+                                        <li>• Payment is due within 30 days of invoice date</li>
+                                        <li>• Late payments may incur additional charges</li>
+                                        <li>• Payment can be made via check, bank transfer, or credit card</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 mb-2">Bank Details:</h4>
+                                    <ul class="space-y-1">
+                                        <li>Bank Name: Business Bank</li>
+                                        <li>Account Number: 123-456-7890</li>
+                                        <li>Routing Number: 987654321</li>
+                                        <li>Swift Code: BUSBUS33</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="border-t border-gray-200 pt-6 mt-8 text-center text-sm text-gray-500">
+                            <p>Thank you for your business!</p>
+                            <p class="mt-1">For questions about this invoice, please contact us at info@smartinventory.com or (555) 123-4567</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        function downloadPDF() {
+            // In a real application, you would send a request to generate and download a PDF
+            // For now, we'll just trigger the print dialog
+            alert('PDF download functionality would be implemented here. For now, please use the print function.');
+            window.print();
+        }
+    </script>
+</body>
+</html>
