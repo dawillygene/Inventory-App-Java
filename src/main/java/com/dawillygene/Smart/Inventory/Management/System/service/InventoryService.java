@@ -241,4 +241,52 @@ public class InventoryService {
     public Inventory releaseReservedStock(Long productId, Integer quantity, String notes) {
         return updateStock(productId, quantity, "IN", notes); // Use existing IN type
     }
+    
+    /**
+     * Get all inventory items (non-paginated)
+     */
+    public List<Inventory> getAllInventory() {
+        return inventoryRepository.findAll();
+    }
+    
+    /**
+     * Get inventory by ID
+     */
+    public Inventory getInventoryById(Long id) {
+        return inventoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Inventory not found with ID: " + id));
+    }
+    
+    /**
+     * Adjust stock with inventory ID instead of product ID
+     */
+    public Inventory adjustStock(Long inventoryId, Integer newQuantity, String reason) {
+        Inventory inventory = inventoryRepository.findById(inventoryId)
+                .orElseThrow(() -> new RuntimeException("Inventory not found with ID: " + inventoryId));
+        
+        Integer currentQuantity = inventory.getQuantity();
+        Integer difference = newQuantity - currentQuantity;
+        
+        if (difference == 0) {
+            return inventory; // No change needed
+        }
+        
+        // Update inventory quantity
+        inventory.setQuantity(newQuantity);
+        inventory.setUpdatedAt(LocalDateTime.now());
+        
+        // Create stock movement record
+        StockMovement stockMovement = new StockMovement();
+        stockMovement.setProduct(inventory.getProduct());
+        stockMovement.setMovementType(StockMovement.MovementType.ADJUSTMENT);
+        stockMovement.setQuantity(Math.abs(difference));
+        stockMovement.setPreviousQuantity(currentQuantity);
+        stockMovement.setNewQuantity(newQuantity);
+        stockMovement.setReason(reason);
+        stockMovement.setCreatedAt(LocalDateTime.now());
+        
+        // Save both records
+        stockMovementRepository.save(stockMovement);
+        return inventoryRepository.save(inventory);
+    }
 }

@@ -153,16 +153,16 @@
 - [x] Bulk import template
 
 ### 6.5 Inventory Templates
-- [ ] Inventory overview template
-- [ ] Stock movement log
-- [ ] Low stock alerts page
-- [ ] Stock adjustment form
+- [x] Inventory overview template
+- [x] Stock movement log
+- [x] Low stock alerts page
+- [x] Stock adjustment form
 
 ### 6.6 Supplier Templates
-- [ ] Supplier list template
-- [ ] Supplier add/edit form
-- [ ] Supplier detail view
-- [ ] Supplier transaction history
+- [x] Supplier list template
+- [x] Supplier add/edit form
+- [x] Supplier detail view
+- [x] Supplier transaction history
 
 ### 6.7 Order Templates
 - [ ] Order list template
@@ -311,7 +311,7 @@
 
 ---
 
-## ✅ Current Progress Summary (85% Complete)
+## ✅ Current Progress Summary (90% Complete)
 
 ### Phase 1: Project Setup & Infrastructure ⚙️ - **100% Complete** ✅
 - [x] Environment setup (Java 21, Maven, MySQL)
@@ -347,12 +347,16 @@
 - [x] Main Application Controllers (Dashboard, Product, Inventory, Supplier, Order, Report)
 - [x] Admin Controllers (User Management, System Settings, Audit Log)
 
-### Phase 6: Frontend Templates 🎨 - **90% Complete** 🟡
+### Phase 6: Frontend Templates 🎨 - **95% Complete** ✅
 - [x] Base Templates (Layout, Navigation, Header/Footer, Sidebar)
 - [x] Authentication Templates (Login, Registration, Password Reset, Access Denied)
 - [x] Dashboard Templates (Main dashboard, Metrics, Charts, Activity, Notifications)
-- [x] Product/Inventory/Order/Supplier Management Templates
-- [x] Admin Templates
+- [x] Product Management Templates (List, Add/Edit Form, Detail View, Category Management, Bulk Import)
+- [x] Inventory Templates (Overview, Stock Movement Log, Low Stock Alerts, Stock Adjustment Form)
+- [ ] Supplier Templates (List, Add/Edit Form, Detail View, Transaction History)
+- [ ] Order Templates (List, Creation Form, Detail View, Invoice, Status Tracking)
+- [ ] Reports Templates (Dashboard, Generation Form, Display, Export)
+- [x] Admin Templates (User Management, System Settings, Audit Log)
 
 ### Phase 7: Frontend Assets & Styling 💅 - **100% Complete** ✅
 - [x] Tailwind CSS integration
