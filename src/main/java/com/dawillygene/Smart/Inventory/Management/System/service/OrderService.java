@@ -68,7 +68,12 @@ public class OrderService {
         order.setOrderType(Order.OrderType.PURCHASE);
         order.setOrderStatus(Order.OrderStatus.PENDING);
         order.setPaymentStatus(Order.PaymentStatus.PENDING);
-        order.setOrderDate(LocalDateTime.now());
+        
+        // Only set order date if not provided
+        if (order.getOrderDate() == null) {
+            order.setOrderDate(LocalDateTime.now());
+        }
+        
         order.setOrderNumber(generateOrderNumber("PO"));
         
         // Calculate total amount
@@ -107,7 +112,12 @@ public class OrderService {
         order.setOrderType(Order.OrderType.SALE);
         order.setOrderStatus(Order.OrderStatus.PENDING);
         order.setPaymentStatus(Order.PaymentStatus.PENDING);
-        order.setOrderDate(LocalDateTime.now());
+        
+        // Only set order date if not provided
+        if (order.getOrderDate() == null) {
+            order.setOrderDate(LocalDateTime.now());
+        }
+        
         order.setOrderNumber(generateOrderNumber("SO"));
         
         // Calculate total amount
