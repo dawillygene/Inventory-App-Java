@@ -116,13 +116,17 @@
                     <i class="fas fa-chevron-right transition-transform duration-300" id="orders-arrow"></i>
                 </div>
                 <div class="collapsible-content ml-8" id="orders-content">
-                    <a href="/orders" class="nav-item p-2 flex items-center space-x-3 text-white no-underline block">
+                    <a href="/orders" class="nav-item p-2 flex items-center space-x-3 text-white no-underline block" th:classappend="${currentUri != null and #strings.startsWith(currentUri, '/orders') and not (#strings.startsWith(currentUri, '/orders/purchase/add') or #strings.startsWith(currentUri, '/orders/sales/add')) ? 'active bg-white bg-opacity-20' : ''}">
                         <i class="fas fa-list w-4"></i>
                         <span class="text-sm">All Orders</span>
                     </a>
-                    <a href="/orders/new" class="nav-item p-2 flex items-center space-x-3 text-white no-underline block">
-                        <i class="fas fa-plus-square w-4"></i>
-                        <span class="text-sm">New Order</span>
+                    <a href="/orders/purchase/add" class="nav-item p-2 flex items-center space-x-3 text-white no-underline block" th:classappend="${currentUri != null and #strings.startsWith(currentUri, '/orders/purchase/add') ? 'active bg-white bg-opacity-20' : ''}">
+                        <i class="fas fa-shopping-cart w-4"></i>
+                        <span class="text-sm">Purchase Order</span>
+                    </a>
+                    <a href="/orders/sales/add" class="nav-item p-2 flex items-center space-x-3 text-white no-underline block" th:classappend="${currentUri != null and #strings.startsWith(currentUri, '/orders/sales/add') ? 'active bg-white bg-opacity-20' : ''}">
+                        <i class="fas fa-money-bill w-4"></i>
+                        <span class="text-sm">Sales Order</span>
                     </a>
                 </div>
             </div>

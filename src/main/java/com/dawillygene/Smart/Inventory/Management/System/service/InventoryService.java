@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -80,6 +81,7 @@ public class InventoryService {
         stockMovement.setQuantity(Math.abs(quantityChange));
         stockMovement.setPreviousQuantity(inventory.getQuantity() - quantityChange);
         stockMovement.setNewQuantity(newQuantity);
+        stockMovement.setReferenceNumber(generateReferenceNumber());
         stockMovement.setNotes(notes);
         stockMovement.setCreatedAt(LocalDateTime.now());
         
@@ -142,6 +144,7 @@ public class InventoryService {
             stockMovement.setQuantity(initialQuantity);
             stockMovement.setPreviousQuantity(0);
             stockMovement.setNewQuantity(initialQuantity);
+            stockMovement.setReferenceNumber(generateReferenceNumber());
             stockMovement.setNotes("Initial inventory setup");
             stockMovement.setCreatedAt(LocalDateTime.now());
             stockMovementRepository.save(stockMovement);
@@ -240,5 +243,97 @@ public class InventoryService {
      */
     public Inventory releaseReservedStock(Long productId, Integer quantity, String notes) {
         return updateStock(productId, quantity, "IN", notes); // Use existing IN type
+    }
+    
+    /**
+     * Get all inventory items (non-paginated)
+     */
+    public List<Inventory> getAllInventory() {
+        return inventoryRepository.findAll();
+    }
+    
+    /**
+     * Get inventory by ID
+     */
+    public Inventory getInventoryById(Long id) {
+        return inventoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Inventory not found with ID: " + id));
+    }
+    
+    /**
+     * Adjust stock with inventory ID instead of product ID
+     */
+    public Inventory adjustStock(Long inventoryId, Integer newQuantity, String reason) {
+        Inventory inventory = inventoryRepository.findById(inventoryId)
+                .orElseThrow(() -> new RuntimeException("Inventory not found with ID: " + inventoryId));
+        
+        Integer currentQuantity = inventory.getQuantity();
+        Integer difference = newQuantity - currentQuantity;
+        
+        if (difference == 0) {
+            return inventory; // No change needed
+        }
+        
+        // Update inventory quantity
+        inventory.setQuantity(newQuantity);
+        inventory.setUpdatedAt(LocalDateTime.now());
+        
+        // Create stock movement record
+        StockMovement stockMovement = new StockMovement();
+        stockMovement.setProduct(inventory.getProduct());
+        stockMovement.setMovementType(StockMovement.MovementType.ADJUSTMENT);
+        stockMovement.setQuantity(Math.abs(difference));
+        stockMovement.setPreviousQuantity(currentQuantity);
+        stockMovement.setNewQuantity(newQuantity);
+        stockMovement.setReferenceNumber(generateReferenceNumber());
+        stockMovement.setReason(reason);
+        stockMovement.setCreatedAt(LocalDateTime.now());
+        
+        // Save both records
+        stockMovementRepository.save(stockMovement);
+        return inventoryRepository.save(inventory);
+    }
+    
+    /**
+     * Get low stock products for reports
+     */
+    public List<Product> getLowStockProducts() {
+        return inventoryRepository.findLowStockItems().stream()
+                .map(Inventory::getProduct)
+                .toList();
+    }
+    
+    /**
+     * Get current stock value for all inventory
+     */
+    public BigDecimal getCurrentStockValue() {
+        Double value = inventoryRepository.getTotalInventoryValue();
+        return value != null ? BigDecimal.valueOf(value) : BigDecimal.ZERO;
+    }
+    
+    /**
+     * Get total stock value (alias for getCurrentStockValue)
+     */
+    public BigDecimal getTotalStockValue() {
+        return getCurrentStockValue();
+    }
+    
+    /**
+     * Get product stock level by product ID
+     */
+    public Integer getProductStockLevel(Long productId) {
+        Optional<Inventory> inventory = inventoryRepository.findByProductId(productId);
+        return inventory.map(Inventory::getQuantity).orElse(0);
+    }
+    
+    /**
+     * Generate a unique reference number for stock movements
+     */
+    private String generateReferenceNumber() {
+        LocalDateTime now = LocalDateTime.now();
+        String timestamp = now.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        // Add a random suffix to ensure uniqueness in case of concurrent operations
+        long randomSuffix = (long) (Math.random() * 1000);
+        return "SM" + timestamp + String.format("%03d", randomSuffix);
     }
 }

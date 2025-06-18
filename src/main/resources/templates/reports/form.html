@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Report - Smart Inventory Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/shared-styles.css">
+</head>
+<body class="bg-gray-50">
+    <!-- Include Sidebar -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="bg-white shadow-sm border-b border-gray-200 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-semibold custom-text">Generate Report</h1>
+                    <p class="text-sm custom-secondary mt-1">Create custom reports for your business insights</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/reports" class="custom-secondary hover:text-gray-700 px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                    </a>
+                    <button onclick="toggleMobileSidebar()" class="md:hidden bg-gray-200 p-2 rounded-lg">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="p-6">
+            <!-- Error Message -->
+            <div th:if="${error}" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-circle text-red-500 mr-3"></i>
+                    <p class="text-red-700" th:text="${error}">Error message</p>
+                </div>
+            </div>
+
+            <div class="max-w-4xl mx-auto">
+                <!-- Report Types Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    <div th:each="reportType : ${reportTypes}" class="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow cursor-pointer report-card"
+                         th:attr="data-report-type=${reportType.id}">
+                        <div class="p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="p-3 rounded-full mr-4"
+                                     th:classappend="${reportType.id == 'inventory'} ? 'bg-blue-100' : (${reportType.id == 'sales'} ? 'bg-green-100' : (${reportType.id == 'purchases'} ? 'bg-purple-100' : (${reportType.id == 'low-stock'} ? 'bg-red-100' : 'bg-yellow-100')))">
+                                    <i th:class="${reportType.id == 'inventory'} ? 'fas fa-boxes text-blue-600' : (${reportType.id == 'sales'} ? 'fas fa-chart-line text-green-600' : (${reportType.id == 'purchases'} ? 'fas fa-shopping-cart text-purple-600' : (${reportType.id == 'low-stock'} ? 'fas fa-exclamation-triangle text-red-600' : 'fas fa-truck text-yellow-600')))"
+                                       class="text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold custom-text" th:text="${reportType.name}">Report Name</h3>
+                                </div>
+                            </div>
+                            <p class="text-sm text-custom-secondary" th:text="${reportType.description}">Report description</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Report Generation Form -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold custom-text mb-6">Report Configuration</h3>
+                    
+                    <form action="/reports/generate" method="post" class="space-y-6">
+                        <!-- Report Type -->
+                        <div>
+                            <label for="reportType" class="block text-sm font-medium custom-text mb-2">Report Type</label>
+                            <select id="reportType" name="reportType" required 
+                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">Select a report type</option>
+                                <option th:each="reportType : ${reportTypes}" 
+                                        th:value="${reportType.id}" 
+                                        th:text="${reportType.name}">Report Name</option>
+                            </select>
+                        </div>
+
+                        <!-- Date Range -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="startDate" class="block text-sm font-medium custom-text mb-2">Start Date</label>
+                                <input type="date" id="startDate" name="startDate" 
+                                       th:value="${T(java.time.LocalDate).now().minusMonths(1)}"
+                                       class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label for="endDate" class="block text-sm font-medium custom-text mb-2">End Date</label>
+                                <input type="date" id="endDate" name="endDate" 
+                                       th:value="${T(java.time.LocalDate).now()}"
+                                       class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                        </div>
+
+                        <!-- Supplier Filter (shown for specific report types) -->
+                        <div id="supplierFilter" style="display: none;">
+                            <label for="supplierId" class="block text-sm font-medium custom-text mb-2">Supplier (Optional)</label>
+                            <select id="supplierId" name="supplierId" 
+                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">All Suppliers</option>
+                                <option th:each="supplier : ${suppliers}" 
+                                        th:value="${supplier.id}" 
+                                        th:text="${supplier.name}">Supplier Name</option>
+                            </select>
+                        </div>
+
+                        <!-- Output Format -->
+                        <div>
+                            <label class="block text-sm font-medium custom-text mb-2">Output Format</label>
+                            <div class="flex space-x-4">
+                                <label class="flex items-center">
+                                    <input type="radio" name="format" value="html" checked class="mr-2">
+                                    <span class="text-sm custom-text">View Online</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" name="format" value="csv" class="mr-2">
+                                    <span class="text-sm custom-text">Download CSV</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+                            <button type="button" onclick="resetForm()" 
+                                    class="text-custom-secondary hover:text-gray-700 px-4 py-2 rounded-lg transition-colors">
+                                Reset Form
+                            </button>
+                            <button type="submit" 
+                                    class="btn-primary px-6 py-2">
+                                <i class="fas fa-chart-bar mr-2"></i>Generate Report
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        function toggleMobileSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('mobile-open');
+        }
+
+        // Handle report type card selection
+        document.addEventListener('DOMContentLoaded', function() {
+            const reportCards = document.querySelectorAll('.report-card');
+            const reportTypeSelect = document.getElementById('reportType');
+            const supplierFilter = document.getElementById('supplierFilter');
+
+            reportCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    const reportType = this.getAttribute('data-report-type');
+                    
+                    // Remove active class from all cards
+                    reportCards.forEach(c => c.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50'));
+                    
+                    // Add active class to clicked card
+                    this.classList.add('ring-2', 'ring-blue-500', 'bg-blue-50');
+                    
+                    // Set select value
+                    reportTypeSelect.value = reportType;
+                    
+                    // Show/hide supplier filter
+                    toggleSupplierFilter(reportType);
+                });
+            });
+
+            // Handle select change
+            reportTypeSelect.addEventListener('change', function() {
+                const reportType = this.value;
+                
+                // Update card selection
+                reportCards.forEach(card => {
+                    card.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50');
+                    if (card.getAttribute('data-report-type') === reportType) {
+                        card.classList.add('ring-2', 'ring-blue-500', 'bg-blue-50');
+                    }
+                });
+                
+                // Show/hide supplier filter
+                toggleSupplierFilter(reportType);
+            });
+
+            function toggleSupplierFilter(reportType) {
+                if (reportType === 'purchases' || reportType === 'supplier') {
+                    supplierFilter.style.display = 'block';
+                } else {
+                    supplierFilter.style.display = 'none';
+                }
+            }
+        });
+
+        function resetForm() {
+            document.querySelector('form').reset();
+            document.querySelectorAll('.report-card').forEach(card => {
+                card.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50');
+            });
+            document.getElementById('supplierFilter').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

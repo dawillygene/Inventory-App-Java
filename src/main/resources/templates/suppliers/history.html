@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Transaction History: ' + ${supplier.name} + ' - Smart Inventory Management'">Transaction History - Smart Inventory Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+</head>
+<body class="bg-gray-50">
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 bg-white shadow-md">
+            <div class="p-4">
+                <h1 class="text-xl font-bold text-gray-800">Smart Inventory</h1>
+            </div>
+            <nav class="mt-4">
+                <a href="/dashboard" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <i class="fas fa-tachometer-alt mr-3"></i>
+                    Dashboard
+                </a>
+                <a href="/products" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <i class="fas fa-box mr-3"></i>
+                    Products
+                </a>
+                <a href="/categories" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <i class="fas fa-tags mr-3"></i>
+                    Categories
+                </a>
+                <a href="/suppliers" class="flex items-center px-4 py-2 text-white bg-blue-600">
+                    <i class="fas fa-truck mr-3"></i>
+                    Suppliers
+                </a>
+                <a href="/inventory" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <i class="fas fa-warehouse mr-3"></i>
+                    Inventory
+                </a>
+                <a href="/orders" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <i class="fas fa-shopping-cart mr-3"></i>
+                    Orders
+                </a>
+                <a href="/reports" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <i class="fas fa-chart-bar mr-3"></i>
+                    Reports
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col">
+            <!-- Header -->
+            <header class="bg-white shadow-sm border-b">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <div class="flex items-center">
+                        <div class="h-12 w-12 rounded-full bg-blue-500 flex items-center justify-center mr-4">
+                            <span class="text-white font-medium text-lg" th:text="${supplier.name.substring(0,1).toUpperCase()}">S</span>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-semibold text-gray-800">Transaction History</h2>
+                            <p class="text-gray-600" th:text="'Purchase orders and transactions with ' + ${supplier.name}">Purchase orders and transactions</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <a th:href="@{/suppliers/view/{id}(id=${supplier.id})}" class="text-gray-600 hover:text-gray-800 px-4 py-2 rounded-lg flex items-center">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            Back to Supplier
+                        </a>
+                        <a href="/orders/add" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+                            <i class="fas fa-plus mr-2"></i>
+                            New Order
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <main class="flex-1 p-6">
+                <div class="max-w-6xl mx-auto space-y-6">
+                    <!-- Supplier Summary Card -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-blue-600">Coming Soon</div>
+                                <div class="text-sm text-gray-500">Total Orders</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-green-600">Coming Soon</div>
+                                <div class="text-sm text-gray-500">Total Amount</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-purple-600">Coming Soon</div>
+                                <div class="text-sm text-gray-500">Avg Delivery Time</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-orange-600">Coming Soon</div>
+                                <div class="text-sm text-gray-500">Last Order</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">
+                            <i class="fas fa-filter mr-2 text-blue-600"></i>
+                            Filter Transactions
+                        </h3>
+                        <form class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+                                <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">All Time</option>
+                                    <option value="7">Last 7 days</option>
+                                    <option value="30">Last 30 days</option>
+                                    <option value="90">Last 90 days</option>
+                                    <option value="365">Last year</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Transaction Type</label>
+                                <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">All Types</option>
+                                    <option value="purchase">Purchase Orders</option>
+                                    <option value="payment">Payments</option>
+                                    <option value="return">Returns</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">All Status</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                            <div class="flex items-end">
+                                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                                    <i class="fas fa-search mr-2"></i>Apply Filters
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Transaction History -->
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-900">
+                                <i class="fas fa-history mr-2 text-blue-600"></i>
+                                Recent Transactions
+                            </h3>
+                        </div>
+                        
+                        <!-- Empty State (Since order management is not yet implemented) -->
+                        <div class="px-6 py-12 text-center">
+                            <div class="mx-auto h-24 w-24 text-gray-400 mb-4">
+                                <i class="fas fa-receipt text-6xl"></i>
+                            </div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">No Transaction History Yet</h3>
+                            <p class="text-gray-500 mb-6">
+                                Transaction history will appear here once the order management system is implemented. 
+                                This will include purchase orders, payments, deliveries, and returns.
+                            </p>
+                            <div class="space-y-4">
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <h4 class="font-medium text-gray-900 mb-2">Coming Soon:</h4>
+                                    <ul class="text-sm text-gray-600 space-y-1">
+                                        <li><i class="fas fa-check text-green-500 mr-2"></i>Purchase order tracking</li>
+                                        <li><i class="fas fa-check text-green-500 mr-2"></i>Payment history</li>
+                                        <li><i class="fas fa-check text-green-500 mr-2"></i>Delivery confirmations</li>
+                                        <li><i class="fas fa-check text-green-500 mr-2"></i>Invoice management</li>
+                                        <li><i class="fas fa-check text-green-500 mr-2"></i>Return processing</li>
+                                    </ul>
+                                </div>
+                                <div class="flex justify-center space-x-4">
+                                    <a href="/orders" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
+                                        <i class="fas fa-shopping-cart mr-2"></i>
+                                        Go to Orders
+                                    </a>
+                                    <a th:href="@{/suppliers/view/{id}(id=${supplier.id})}" class="border border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-2 rounded-lg">
+                                        <i class="fas fa-eye mr-2"></i>
+                                        View Supplier Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Future Transaction Table Template -->
+                        <div class="hidden overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <!-- Transaction rows will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Supplier Performance Metrics (Preview) -->
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-900">
+                                <i class="fas fa-chart-line mr-2 text-blue-600"></i>
+                                Performance Metrics (Preview)
+                            </h3>
+                        </div>
+                        <div class="px-6 py-6">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div class="text-center p-6 bg-gray-50 rounded-lg">
+                                    <div class="text-3xl font-bold text-blue-600 mb-2">98%</div>
+                                    <div class="text-sm text-gray-600">On-Time Delivery</div>
+                                    <div class="text-xs text-gray-500 mt-1">Will be calculated from actual orders</div>
+                                </div>
+                                <div class="text-center p-6 bg-gray-50 rounded-lg">
+                                    <div class="text-3xl font-bold text-green-600 mb-2">4.8</div>
+                                    <div class="text-sm text-gray-600">Quality Rating</div>
+                                    <div class="text-xs text-gray-500 mt-1">Based on order feedback</div>
+                                </div>
+                                <div class="text-center p-6 bg-gray-50 rounded-lg">
+                                    <div class="text-3xl font-bold text-purple-600 mb-2">5.2</div>
+                                    <div class="text-sm text-gray-600">Avg Days to Deliver</div>
+                                    <div class="text-xs text-gray-500 mt-1">Actual vs promised delivery</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">
+                            <i class="fas fa-bolt mr-2 text-blue-600"></i>
+                            Quick Actions
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <a href="/orders/add" class="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                                <div class="text-center">
+                                    <i class="fas fa-plus-circle text-2xl text-blue-600 mb-2"></i>
+                                    <div class="text-sm font-medium text-gray-900">Create Order</div>
+                                </div>
+                            </a>
+                            <a href="#" class="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors">
+                                <div class="text-center">
+                                    <i class="fas fa-file-invoice text-2xl text-green-600 mb-2"></i>
+                                    <div class="text-sm font-medium text-gray-900">View Invoices</div>
+                                </div>
+                            </a>
+                            <a href="#" class="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors">
+                                <div class="text-center">
+                                    <i class="fas fa-credit-card text-2xl text-purple-600 mb-2"></i>
+                                    <div class="text-sm font-medium text-gray-900">Record Payment</div>
+                                </div>
+                            </a>
+                            <a th:href="@{/suppliers/edit/{id}(id=${supplier.id})}" class="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-colors">
+                                <div class="text-center">
+                                    <i class="fas fa-edit text-2xl text-orange-600 mb-2"></i>
+                                    <div class="text-sm font-medium text-gray-900">Edit Supplier</div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Chart placeholder for future implementation
+        document.addEventListener('DOMContentLoaded', function() {
+            // This will be implemented when we add Chart.js integration
+            console.log('Transaction history page loaded for supplier:', th:text="${supplier.name}");
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Management - Smart Inventory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/shared-styles.css">
+</head>
+<body class="bg-gray-50">
+    <div class="flex">
+        <!-- Sidebar -->
+        <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="bg-white shadow-sm border-b border-gray-200 p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-semibold custom-text">Order Management</h1>
+                        <p class="text-sm custom-secondary mt-1">Manage purchase and sales orders</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <a th:href="@{/orders/purchase/add}" 
+                           class="btn-primary px-4 py-2 flex items-center space-x-2">
+                            <i class="fas fa-plus"></i>
+                            <span>New Purchase Order</span>
+                        </a>
+                        <a th:href="@{/orders/sales/add}" 
+                           class="btn-secondary px-4 py-2 flex items-center space-x-2">
+                            <i class="fas fa-plus"></i>
+                            <span>New Sales Order</span>
+                        </a>
+                        <button onclick="toggleMobileSidebar()" class="md:hidden bg-gray-200 p-2 rounded-lg">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6">
+                <!-- Alert Messages -->
+                <div th:if="${success}" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+                    <span th:text="${success}"></span>
+                </div>
+                <div th:if="${error}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    <span th:text="${error}"></span>
+                </div>
+
+                <!-- Filters and Search -->
+                <div class="bg-white rounded-lg shadow-sm border p-6 mb-6">
+                    <form th:action="@{/orders}" method="get" class="flex flex-wrap gap-4 items-end">
+                        <!-- Search -->
+                        <div class="flex-1 min-w-64">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Search Orders</label>
+                            <input type="text" name="search" th:value="${search}"
+                                   placeholder="Search by order number, customer, or reference..."
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        
+                        <!-- Order Type Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Order Type</label>
+                            <select name="orderType" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">All Types</option>
+                                <option th:each="type : ${orderTypes}" 
+                                        th:value="${type.name()}" 
+                                        th:text="${type.getDescription()}"
+                                        th:selected="${type.name() == selectedOrderType}"></option>
+                            </select>
+                        </div>
+                        
+                        <!-- Status Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            <select name="orderStatus" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">All Statuses</option>
+                                <option th:each="status : ${orderStatuses}" 
+                                        th:value="${status.name()}" 
+                                        th:text="${status.getDescription()}"
+                                        th:selected="${status.name() == selectedOrderStatus}"></option>
+                            </select>
+                        </div>
+                        
+                        <!-- Sort -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+                            <select name="sortBy" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="orderDate" th:selected="${sortBy == 'orderDate'}">Order Date</option>
+                                <option value="orderNumber" th:selected="${sortBy == 'orderNumber'}">Order Number</option>
+                                <option value="totalAmount" th:selected="${sortBy == 'totalAmount'}">Total Amount</option>
+                                <option value="orderStatus" th:selected="${sortBy == 'orderStatus'}">Status</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Sort Direction -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Direction</label>
+                            <select name="sortDir" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="desc" th:selected="${sortDir == 'desc'}">Descending</option>
+                                <option value="asc" th:selected="${sortDir == 'asc'}">Ascending</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div class="flex space-x-2">
+                            <button type="submit" 
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors">
+                                <i class="fas fa-search mr-1"></i> Search
+                            </button>
+                            <a th:href="@{/orders}" 
+                               class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition-colors">
+                                <i class="fas fa-times mr-1"></i> Clear
+                            </a>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Orders Table -->
+                <div class="bg-white rounded-lg shadow-sm border">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Order Number
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Type
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Customer/Supplier
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Date
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Total Amount
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Status
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Payment
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr th:if="${orderPage.isEmpty()}" class="text-center">
+                                    <td colspan="8" class="px-6 py-12 text-gray-500">
+                                        <div class="flex flex-col items-center">
+                                            <i class="fas fa-clipboard-list text-4xl text-gray-300 mb-4"></i>
+                                            <p class="text-lg font-medium">No orders found</p>
+                                            <p class="text-sm">Create your first order to get started</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:each="order : ${orderPage.content}" class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900" th:text="${order.orderNumber}"></div>
+                                        <div class="text-sm text-gray-500" th:text="${order.reference}"></div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span th:if="${order.orderType.name() == 'PURCHASE'}" 
+                                              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            <i class="fas fa-shopping-cart mr-1"></i>
+                                            Purchase
+                                        </span>
+                                        <span th:if="${order.orderType.name() == 'SALE'}" 
+                                              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <i class="fas fa-money-bill mr-1"></i>
+                                            Sale
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">
+                                            <span th:if="${order.supplier}" th:text="${order.supplier.name}"></span>
+                                            <span th:unless="${order.supplier}" class="text-gray-500">Customer Name</span>
+                                        </div>
+                                        <div class="text-sm text-gray-500" th:if="${order.supplier}" th:text="${order.supplier.contactEmail}"></div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <div th:text="${#temporals.format(order.orderDate, 'MMM dd, yyyy')}"></div>
+                                        <div class="text-xs text-gray-500" th:text="${#temporals.format(order.orderDate, 'HH:mm')}"></div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <span th:text="${'$' + #numbers.formatDecimal(order.totalAmount, 1, 2)}"></span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span th:class="${'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ' + 
+                                                        (order.orderStatus.name() == 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                                                         order.orderStatus.name() == 'CONFIRMED' ? 'bg-blue-100 text-blue-800' :
+                                                         order.orderStatus.name() == 'PROCESSING' ? 'bg-purple-100 text-purple-800' :
+                                                         order.orderStatus.name() == 'SHIPPED' ? 'bg-indigo-100 text-indigo-800' :
+                                                         order.orderStatus.name() == 'DELIVERED' ? 'bg-green-100 text-green-800' :
+                                                         order.orderStatus.name() == 'CANCELLED' ? 'bg-red-100 text-red-800' :
+                                                         'bg-gray-100 text-gray-800')}"
+                                              th:text="${order.orderStatus.description}">
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span th:class="${'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ' + 
+                                                        (order.paymentStatus.name() == 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                                                         order.paymentStatus.name() == 'PAID' ? 'bg-green-100 text-green-800' :
+                                                         order.paymentStatus.name() == 'PARTIAL' ? 'bg-orange-100 text-orange-800' :
+                                                         order.paymentStatus.name() == 'REFUNDED' ? 'bg-purple-100 text-purple-800' :
+                                                         'bg-gray-100 text-gray-800')}"
+                                              th:text="${order.paymentStatus.description}">
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <div class="flex space-x-2">
+                                            <a th:href="@{/orders/view/{id}(id=${order.id})}" 
+                                               class="text-blue-600 hover:text-blue-900" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a th:if="${order.canBeModified()}" 
+                                               th:href="@{/orders/edit/{id}(id=${order.id})}" 
+                                               class="text-indigo-600 hover:text-indigo-900" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a th:href="@{/orders/invoice/{id}(id=${order.id})}" 
+                                               class="text-green-600 hover:text-green-900" title="View Invoice">
+                                                <i class="fas fa-file-invoice"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div th:if="${orderPage.totalPages > 1}" class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex justify-between sm:hidden">
+                                <a th:if="${orderPage.hasPrevious()}" 
+                                   th:href="@{/orders(page=${orderPage.number - 1}, size=${orderPage.size}, sortBy=${sortBy}, sortDir=${sortDir}, search=${search}, orderType=${selectedOrderType}, orderStatus=${selectedOrderStatus})}"
+                                   class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                    Previous
+                                </a>
+                                <a th:if="${orderPage.hasNext()}" 
+                                   th:href="@{/orders(page=${orderPage.number + 1}, size=${orderPage.size}, sortBy=${sortBy}, sortDir=${sortDir}, search=${search}, orderType=${selectedOrderType}, orderStatus=${selectedOrderStatus})}"
+                                   class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                    Next
+                                </a>
+                            </div>
+                            <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-700">
+                                        Showing <span class="font-medium" th:text="${orderPage.number * orderPage.size + 1}"></span>
+                                        to <span class="font-medium" th:text="${#numbers.min(orderPage.number * orderPage.size + orderPage.size, orderPage.totalElements)}"></span>
+                                        of <span class="font-medium" th:text="${orderPage.totalElements}"></span> results
+                                    </p>
+                                </div>
+                                <div>
+                                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                        <!-- Previous Page -->
+                                        <a th:if="${orderPage.hasPrevious()}" 
+                                           th:href="@{/orders(page=${orderPage.number - 1}, size=${orderPage.size}, sortBy=${sortBy}, sortDir=${sortDir}, search=${search}, orderType=${selectedOrderType}, orderStatus=${selectedOrderStatus})}"
+                                           class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                        
+                                        <!-- Page Numbers -->
+                                        <th:block th:each="pageNum : ${#numbers.sequence(0, orderPage.totalPages - 1)}">
+                                            <a th:if="${pageNum == orderPage.number}" 
+                                               class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">
+                                                <span th:text="${pageNum + 1}"></span>
+                                            </a>
+                                            <a th:unless="${pageNum == orderPage.number}" 
+                                               th:href="@{/orders(page=${pageNum}, size=${orderPage.size}, sortBy=${sortBy}, sortDir=${sortDir}, search=${search}, orderType=${selectedOrderType}, orderStatus=${selectedOrderStatus})}"
+                                               class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                                <span th:text="${pageNum + 1}"></span>
+                                            </a>
+                                        </th:block>
+                                        
+                                        <!-- Next Page -->
+                                        <a th:if="${orderPage.hasNext()}" 
+                                           th:href="@{/orders(page=${orderPage.number + 1}, size=${orderPage.size}, sortBy=${sortBy}, sortDir=${sortDir}, search=${search}, orderType=${selectedOrderType}, orderStatus=${selectedOrderStatus})}"
+                                           class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        function toggleMobileSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('mobile-open');
+        }
+    </script>
+</body>
+</html>
